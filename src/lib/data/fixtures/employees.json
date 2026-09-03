@@ -1,0 +1,450 @@
+[
+  {
+    "id": "emp_0001",
+    "jobFamilyId": "jf_design",
+    "department": "Brand & Marketing Design",
+    "bandId": "band_mid",
+    "hireDate": "2023-05-09",
+    "active": true
+  },
+  {
+    "id": "emp_0002",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_mid",
+    "hireDate": "2024-08-15",
+    "active": true
+  },
+  {
+    "id": "emp_0003",
+    "jobFamilyId": "jf_sales",
+    "department": "Sales Development",
+    "bandId": "band_staff",
+    "hireDate": "2020-12-30",
+    "active": true
+  },
+  {
+    "id": "emp_0004",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_senior",
+    "hireDate": "2019-01-11",
+    "active": true
+  },
+  {
+    "id": "emp_0005",
+    "jobFamilyId": "jf_marketing",
+    "department": "Content",
+    "bandId": "band_junior",
+    "hireDate": "2019-03-17",
+    "active": true
+  },
+  {
+    "id": "emp_0006",
+    "jobFamilyId": "jf_engineering",
+    "department": "Infrastructure",
+    "bandId": "band_junior",
+    "hireDate": "2022-06-12",
+    "active": true
+  },
+  {
+    "id": "emp_0007",
+    "jobFamilyId": "jf_engineering",
+    "department": "Product Engineering",
+    "bandId": "band_staff",
+    "hireDate": "2024-04-04",
+    "active": true
+  },
+  {
+    "id": "emp_0008",
+    "jobFamilyId": "jf_product",
+    "department": "Core Product",
+    "bandId": "band_junior",
+    "hireDate": "2022-08-14",
+    "active": true
+  },
+  {
+    "id": "emp_0009",
+    "jobFamilyId": "jf_sales",
+    "department": "Enterprise",
+    "bandId": "band_senior",
+    "hireDate": "2020-12-22",
+    "active": true
+  },
+  {
+    "id": "emp_0010",
+    "jobFamilyId": "jf_marketing",
+    "department": "Demand Generation",
+    "bandId": "band_senior",
+    "hireDate": "2020-11-06",
+    "active": true
+  },
+  {
+    "id": "emp_0011",
+    "jobFamilyId": "jf_engineering",
+    "department": "Infrastructure",
+    "bandId": "band_senior",
+    "hireDate": "2023-07-04",
+    "active": false
+  },
+  {
+    "id": "emp_0012",
+    "jobFamilyId": "jf_engineering",
+    "department": "Product Engineering",
+    "bandId": "band_staff",
+    "hireDate": "2025-02-14",
+    "active": true
+  },
+  {
+    "id": "emp_0013",
+    "jobFamilyId": "jf_engineering",
+    "department": "Product Engineering",
+    "bandId": "band_junior",
+    "hireDate": "2022-02-17",
+    "active": true
+  },
+  {
+    "id": "emp_0014",
+    "jobFamilyId": "jf_marketing",
+    "department": "Lifecycle",
+    "bandId": "band_junior",
+    "hireDate": "2025-01-27",
+    "active": true
+  },
+  {
+    "id": "emp_0015",
+    "jobFamilyId": "jf_design",
+    "department": "Brand & Marketing Design",
+    "bandId": "band_junior",
+    "hireDate": "2024-05-04",
+    "active": true
+  },
+  {
+    "id": "emp_0016",
+    "jobFamilyId": "jf_marketing",
+    "department": "Lifecycle",
+    "bandId": "band_senior",
+    "hireDate": "2021-10-27",
+    "active": true
+  },
+  {
+    "id": "emp_0017",
+    "jobFamilyId": "jf_sales",
+    "department": "Enterprise",
+    "bandId": "band_senior",
+    "hireDate": "2023-09-28",
+    "active": true
+  },
+  {
+    "id": "emp_0018",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_staff",
+    "hireDate": "2025-06-16",
+    "active": false
+  },
+  {
+    "id": "emp_0019",
+    "jobFamilyId": "jf_product",
+    "department": "Core Product",
+    "bandId": "band_senior",
+    "hireDate": "2019-08-29",
+    "active": true
+  },
+  {
+    "id": "emp_0020",
+    "jobFamilyId": "jf_sales",
+    "department": "Sales Development",
+    "bandId": "band_staff",
+    "hireDate": "2019-08-12",
+    "active": true
+  },
+  {
+    "id": "emp_0021",
+    "jobFamilyId": "jf_marketing",
+    "department": "Lifecycle",
+    "bandId": "band_junior",
+    "hireDate": "2020-02-29",
+    "active": true
+  },
+  {
+    "id": "emp_0022",
+    "jobFamilyId": "jf_design",
+    "department": "Product Design",
+    "bandId": "band_junior",
+    "hireDate": "2020-01-24",
+    "active": true
+  },
+  {
+    "id": "emp_0023",
+    "jobFamilyId": "jf_sales",
+    "department": "Mid-Market",
+    "bandId": "band_junior",
+    "hireDate": "2024-10-05",
+    "active": true
+  },
+  {
+    "id": "emp_0024",
+    "jobFamilyId": "jf_design",
+    "department": "Product Design",
+    "bandId": "band_mid",
+    "hireDate": "2024-08-11",
+    "active": true
+  },
+  {
+    "id": "emp_0025",
+    "jobFamilyId": "jf_engineering",
+    "department": "Product Engineering",
+    "bandId": "band_senior",
+    "hireDate": "2024-09-09",
+    "active": false
+  },
+  {
+    "id": "emp_0026",
+    "jobFamilyId": "jf_sales",
+    "department": "Mid-Market",
+    "bandId": "band_senior",
+    "hireDate": "2020-03-13",
+    "active": true
+  },
+  {
+    "id": "emp_0027",
+    "jobFamilyId": "jf_design",
+    "department": "Product Design",
+    "bandId": "band_senior",
+    "hireDate": "2020-10-16",
+    "active": true
+  },
+  {
+    "id": "emp_0028",
+    "jobFamilyId": "jf_engineering",
+    "department": "Infrastructure",
+    "bandId": "band_junior",
+    "hireDate": "2022-09-20",
+    "active": false
+  },
+  {
+    "id": "emp_0029",
+    "jobFamilyId": "jf_engineering",
+    "department": "Product Engineering",
+    "bandId": "band_junior",
+    "hireDate": "2020-11-25",
+    "active": true
+  },
+  {
+    "id": "emp_0030",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_mid",
+    "hireDate": "2021-08-04",
+    "active": true
+  },
+  {
+    "id": "emp_0031",
+    "jobFamilyId": "jf_marketing",
+    "department": "Content",
+    "bandId": "band_mid",
+    "hireDate": "2022-12-20",
+    "active": true
+  },
+  {
+    "id": "emp_0032",
+    "jobFamilyId": "jf_product",
+    "department": "Core Product",
+    "bandId": "band_junior",
+    "hireDate": "2020-12-10",
+    "active": true
+  },
+  {
+    "id": "emp_0033",
+    "jobFamilyId": "jf_design",
+    "department": "Product Design",
+    "bandId": "band_junior",
+    "hireDate": "2023-07-08",
+    "active": true
+  },
+  {
+    "id": "emp_0034",
+    "jobFamilyId": "jf_engineering",
+    "department": "Platform",
+    "bandId": "band_mid",
+    "hireDate": "2022-10-02",
+    "active": true
+  },
+  {
+    "id": "emp_0035",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_mid",
+    "hireDate": "2024-12-05",
+    "active": true
+  },
+  {
+    "id": "emp_0036",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_junior",
+    "hireDate": "2022-06-01",
+    "active": false
+  },
+  {
+    "id": "emp_0037",
+    "jobFamilyId": "jf_marketing",
+    "department": "Demand Generation",
+    "bandId": "band_mid",
+    "hireDate": "2023-01-08",
+    "active": true
+  },
+  {
+    "id": "emp_0038",
+    "jobFamilyId": "jf_sales",
+    "department": "Mid-Market",
+    "bandId": "band_mid",
+    "hireDate": "2025-05-25",
+    "active": true
+  },
+  {
+    "id": "emp_0039",
+    "jobFamilyId": "jf_marketing",
+    "department": "Lifecycle",
+    "bandId": "band_staff",
+    "hireDate": "2019-05-09",
+    "active": true
+  },
+  {
+    "id": "emp_0040",
+    "jobFamilyId": "jf_engineering",
+    "department": "Infrastructure",
+    "bandId": "band_senior",
+    "hireDate": "2023-12-11",
+    "active": false
+  },
+  {
+    "id": "emp_0041",
+    "jobFamilyId": "jf_marketing",
+    "department": "Lifecycle",
+    "bandId": "band_senior",
+    "hireDate": "2024-07-17",
+    "active": true
+  },
+  {
+    "id": "emp_0042",
+    "jobFamilyId": "jf_sales",
+    "department": "Sales Development",
+    "bandId": "band_mid",
+    "hireDate": "2023-06-05",
+    "active": true
+  },
+  {
+    "id": "emp_0043",
+    "jobFamilyId": "jf_marketing",
+    "department": "Demand Generation",
+    "bandId": "band_senior",
+    "hireDate": "2024-06-27",
+    "active": true
+  },
+  {
+    "id": "emp_0044",
+    "jobFamilyId": "jf_sales",
+    "department": "Enterprise",
+    "bandId": "band_junior",
+    "hireDate": "2023-03-18",
+    "active": true
+  },
+  {
+    "id": "emp_0045",
+    "jobFamilyId": "jf_marketing",
+    "department": "Content",
+    "bandId": "band_staff",
+    "hireDate": "2023-08-07",
+    "active": true
+  },
+  {
+    "id": "emp_0046",
+    "jobFamilyId": "jf_sales",
+    "department": "Enterprise",
+    "bandId": "band_junior",
+    "hireDate": "2020-11-22",
+    "active": true
+  },
+  {
+    "id": "emp_0047",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_senior",
+    "hireDate": "2024-02-06",
+    "active": true
+  },
+  {
+    "id": "emp_0048",
+    "jobFamilyId": "jf_design",
+    "department": "Product Design",
+    "bandId": "band_senior",
+    "hireDate": "2022-01-18",
+    "active": true
+  },
+  {
+    "id": "emp_0049",
+    "jobFamilyId": "jf_product",
+    "department": "Core Product",
+    "bandId": "band_mid",
+    "hireDate": "2019-12-18",
+    "active": true
+  },
+  {
+    "id": "emp_0050",
+    "jobFamilyId": "jf_sales",
+    "department": "Mid-Market",
+    "bandId": "band_senior",
+    "hireDate": "2023-03-17",
+    "active": true
+  },
+  {
+    "id": "emp_0051",
+    "jobFamilyId": "jf_engineering",
+    "department": "Platform",
+    "bandId": "band_junior",
+    "hireDate": "2025-02-16",
+    "active": true
+  },
+  {
+    "id": "emp_0052",
+    "jobFamilyId": "jf_marketing",
+    "department": "Content",
+    "bandId": "band_mid",
+    "hireDate": "2019-08-24",
+    "active": false
+  },
+  {
+    "id": "emp_0053",
+    "jobFamilyId": "jf_engineering",
+    "department": "Platform",
+    "bandId": "band_mid",
+    "hireDate": "2023-07-26",
+    "active": true
+  },
+  {
+    "id": "emp_0054",
+    "jobFamilyId": "jf_engineering",
+    "department": "Infrastructure",
+    "bandId": "band_staff",
+    "hireDate": "2023-04-19",
+    "active": true
+  },
+  {
+    "id": "emp_0055",
+    "jobFamilyId": "jf_product",
+    "department": "Growth",
+    "bandId": "band_staff",
+    "hireDate": "2020-02-25",
+    "active": true
+  },
+  {
+    "id": "emp_0056",
+    "jobFamilyId": "jf_engineering",
+    "department": "Platform",
+    "bandId": "band_junior",
+    "hireDate": "2023-05-15",
+    "active": true
+  }
+]

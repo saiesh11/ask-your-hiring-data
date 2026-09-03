@@ -1,0 +1,22 @@
+[
+  {
+    "id": "band_junior",
+    "name": "Junior",
+    "order": 1
+  },
+  {
+    "id": "band_mid",
+    "name": "Mid",
+    "order": 2
+  },
+  {
+    "id": "band_senior",
+    "name": "Senior",
+    "order": 3
+  },
+  {
+    "id": "band_staff",
+    "name": "Staff",
+    "order": 4
+  }
+]
