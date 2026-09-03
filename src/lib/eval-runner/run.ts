@@ -115,6 +115,26 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
     } else {
       failures.push(`kind: recompute="${recomputed.kind}", pipeline="${response.kind}"`);
     }
+
+    // Groundedness: an answer must cite records, name fields, and the cited set
+    // must be exactly the records the executor independently counted.
+    if (recomputed.ok) {
+      const { recordCount, recordIds, fields } = response.citations;
+      if (recordCount !== recordIds.length) {
+        failures.push(
+          `citations.recordCount (${recordCount}) != recordIds.length (${recordIds.length})`,
+        );
+      }
+      if (recordCount === 0) failures.push("answered but cited zero records");
+      if (fields.length === 0) failures.push("answered but named no fields");
+      const cited = [...new Set(recordIds)].sort();
+      const counted = [...new Set(recomputed.citations.recordIds)].sort();
+      if (!equal(cited, counted)) {
+        failures.push(
+          `citations mismatch: cited ${cited.length} record(s), executor counted ${counted.length}`,
+        );
+      }
+    }
   }
 
   const observed =
