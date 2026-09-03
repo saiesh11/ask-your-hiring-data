@@ -89,6 +89,45 @@ describe("Chat", () => {
     expect(screen.getByText(/Headcount — Engineering: 10/)).toBeInTheDocument();
   });
 
+  it("clears the transcript when the role changes (no cross-role leakage)", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string | URL) => {
+        const target = String(url);
+        const body = target.includes("/api/users")
+          ? {
+              users: [
+                {
+                  id: "chro",
+                  displayName: "Casey — CHRO",
+                  role: "chro",
+                  scope: "Organization-wide",
+                },
+                {
+                  id: "recruiter_eng",
+                  displayName: "Riley — Recruiter (Engineering)",
+                  role: "recruiter",
+                  scope: "Engineering only",
+                },
+              ],
+            }
+          : answered;
+        return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
+      }),
+    );
+
+    render(<Chat />);
+    await user.type(screen.getByLabelText("Question"), "headcount");
+    await user.click(screen.getByRole("button", { name: "Ask" }));
+    expect(await screen.findByTestId("answered")).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole("combobox"), "recruiter_eng");
+
+    expect(screen.queryByTestId("answered")).not.toBeInTheDocument();
+    expect(screen.getByText(/Previous results cleared/)).toBeInTheDocument();
+  });
+
   it("shows an error bubble when /api/ask returns a 400", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

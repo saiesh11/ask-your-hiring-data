@@ -8,6 +8,7 @@ import styles from "./chat.module.css";
 type Turn =
   | { role: "user"; text: string }
   | { role: "assistant"; response: AnsweredResponse | RefusedResponse }
+  | { role: "system"; text: string }
   | { role: "error"; text: string };
 
 const SUGGESTIONS = [
@@ -48,8 +49,33 @@ export function Chat() {
 
   useEffect(() => {
     const el = transcriptRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const toBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    toBottom();
+    // Re-scroll after layout settles (the chart mounts with a fixed height).
+    const raf = requestAnimationFrame(toBottom);
+    return () => cancelAnimationFrame(raf);
   }, [turns, pending]);
+
+  function switchUser(nextUserId: string) {
+    if (nextUserId === userId) return;
+    setUserId(nextUserId);
+    setInput("");
+    // Never carry one role's answers into another view.
+    setTurns((prev) => {
+      if (prev.length === 0) return [];
+      const next = users.find((u) => u.id === nextUserId);
+      const scope = next ? ` — ${next.scope.toLowerCase()}` : "";
+      return [
+        {
+          role: "system",
+          text: `Now viewing as ${next?.displayName ?? nextUserId}${scope}. Previous results cleared.`,
+        },
+      ];
+    });
+  }
 
   async function ask(question: string) {
     const trimmed = question.trim();
@@ -91,7 +117,7 @@ export function Chat() {
         <h1 className={styles.title}>Ask Your Hiring Data</h1>
         <label className={styles.switcher}>
           Viewing as
-          <select value={userId} onChange={(e) => setUserId(e.target.value)}>
+          <select value={userId} onChange={(e) => switchUser(e.target.value)}>
             {(users.length > 0
               ? users
               : [{ id: "chro", displayName: "CHRO", role: "chro", scope: "" }]
