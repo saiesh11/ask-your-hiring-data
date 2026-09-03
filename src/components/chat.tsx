@@ -25,7 +25,7 @@ function isAskResponse(value: unknown): value is AnsweredResponse | RefusedRespo
 }
 
 export function Chat() {
-  const { activeTurns, appendTurn, activeUserId } = useChatStore();
+  const { hydrated, activeTurns, appendTurn, activeUserId } = useChatStore();
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -115,6 +115,18 @@ export function Chat() {
       </div>
     </form>
   );
+
+  // Hold the render until localStorage has been read, so a persisted
+  // conversation doesn't flash the empty state (or vice-versa) on reload.
+  if (!hydrated) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-6 px-4">
+        <div className="size-11 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-6 w-52 animate-pulse rounded bg-muted" />
+        <div className="h-11 w-full animate-pulse rounded-2xl bg-muted" />
+      </div>
+    );
+  }
 
   if (empty) {
     return (

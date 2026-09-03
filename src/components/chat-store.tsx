@@ -27,6 +27,8 @@ export interface Conversation {
 }
 
 interface ChatStore {
+  /** false until localStorage has been read — consumers hold their render to avoid a flash. */
+  hydrated: boolean;
   /** Only the active principal's conversations. */
   conversations: Conversation[];
   activeId: string | null;
@@ -167,6 +169,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ChatStore>(
     () => ({
+      hydrated,
       conversations,
       activeId,
       activeTurns,
@@ -179,6 +182,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
       appendTurn,
     }),
     [
+      hydrated,
       conversations,
       activeId,
       activeTurns,
