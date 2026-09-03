@@ -1,7 +1,33 @@
+import { redirect } from "next/navigation";
 import { Chat } from "@/components/chat";
+import { NoOrganizationError, requireContext } from "@/lib/tenancy/context";
 
-// TODO(S6): the chat still uses the dev "view as" switcher + userId body param.
-// S6 wires it to the signed-in user's org membership.
-export default function AppPage() {
-  return <Chat />;
+export default async function AppPage() {
+  let ctx;
+  try {
+    ctx = await requireContext();
+  } catch (error) {
+    // UnauthenticatedError is already handled by the layout guard.
+    if (error instanceof NoOrganizationError) redirect("/signup");
+    throw error;
+  }
+
+  const scope = ctx.executionContext.scope;
+  const scopeLabel =
+    scope === null
+      ? "organization-wide"
+      : scope.length > 0
+        ? scope.join(" / ")
+        : "no job families assigned";
+
+  return (
+    <Chat
+      me={{
+        name: ctx.user.name,
+        orgName: ctx.org.name,
+        role: ctx.membership.role,
+        scopeLabel,
+      }}
+    />
+  );
 }

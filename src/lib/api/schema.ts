@@ -1,5 +1,4 @@
 import * as z from "zod";
-import { Role } from "@/lib/db";
 import { FiltersSchema, JOB_FAMILIES, METRICS } from "@/lib/query-ir";
 
 /**
@@ -10,8 +9,7 @@ import { FiltersSchema, JOB_FAMILIES, METRICS } from "@/lib/query-ir";
  */
 
 export const AskRequestSchema = z.strictObject({
-  // TODO(S5): drop `userId` — the caller comes from the Auth.js session.
-  userId: z.string().min(1),
+  // The caller (org + role + scope) is resolved from the session, not the body.
   question: z.string().trim().min(1).max(500),
 });
 export type AskRequest = z.infer<typeof AskRequestSchema>;
@@ -93,16 +91,3 @@ export const AskResponseSchema = z.discriminatedUnion("status", [AnsweredSchema,
 export type AskResponse = z.infer<typeof AskResponseSchema>;
 export type AnsweredResponse = z.infer<typeof AnsweredSchema>;
 export type RefusedResponse = z.infer<typeof RefusedSchema>;
-
-// --- GET /api/users (dev "view as" switcher; replaced by real auth in S5) ---
-
-export const DemoUserPublicSchema = z.strictObject({
-  id: z.string(),
-  displayName: z.string(),
-  role: z.enum(Role),
-  scope: z.string(),
-});
-export type DemoUserPublic = z.infer<typeof DemoUserPublicSchema>;
-
-export const UsersResponseSchema = z.strictObject({ users: z.array(DemoUserPublicSchema) });
-export type UsersResponse = z.infer<typeof UsersResponseSchema>;

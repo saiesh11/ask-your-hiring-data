@@ -1,8 +1,9 @@
 import evalSetRaw from "./eval-set.json";
 import { EvalSetSchema, type EvalCase } from "./schema";
-import { resolveDevPrincipal, runAskPipeline } from "@/lib/api";
+import { resolveDevPrincipal } from "./principals";
+import { runAskPipeline } from "@/lib/api";
 import { execute } from "@/lib/executor";
-import { buildOrgDataset } from "@/lib/hiring-data";
+import { buildOrgDataset, InMemoryHiringDataSource } from "@/lib/hiring-data";
 import { getLlmProvider } from "@/lib/llm";
 import type { QueryIR } from "@/lib/query-ir";
 
@@ -60,7 +61,16 @@ function equal(a: unknown, b: unknown): boolean {
 export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
   const { id, question, userId, expected } = evalCase;
   const failures: string[] = [];
-  const response = await runAskPipeline({ userId, question }, { provider: EVAL_PROVIDER });
+  const principal = resolveDevPrincipal(userId);
+  const response = await runAskPipeline(
+    { question },
+    {
+      context: principal.context,
+      dataSource: new InMemoryHiringDataSource(principal.seed),
+      provider: EVAL_PROVIDER,
+      logMeta: { userId },
+    },
+  );
 
   if (expected.refused) {
     if (response.status !== "refused") {
@@ -97,7 +107,6 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
     }
 
     // Independent recompute via the executor directly.
-    const principal = resolveDevPrincipal(userId);
     const ir: QueryIR = {
       version: 1,
       metric: expected.metric,

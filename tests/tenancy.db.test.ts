@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/client";
-import { createAccount } from "@/lib/tenancy";
+import { createAccount } from "@/lib/tenancy/signup";
 import { PrismaHiringDataSource } from "@/lib/hiring-data/prisma-source";
 import { buildOrgDataset } from "@/lib/hiring-data";
 import { execute, ORG_WIDE } from "@/lib/executor";

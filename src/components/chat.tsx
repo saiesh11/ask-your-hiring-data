@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AnsweredResponse, DemoUserPublic, RefusedResponse } from "@/lib/api";
+import { signOut } from "next-auth/react";
+import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
 import { AnswerView } from "./answer-view";
 import styles from "./chat.module.css";
+
+export interface ChatViewer {
+  name: string;
+  orgName: string;
+  role: string;
+  scopeLabel: string;
+}
 
 type Turn =
   | { role: "user"; text: string }
   | { role: "assistant"; response: AnsweredResponse | RefusedResponse }
-  | { role: "system"; text: string }
   | { role: "error"; text: string };
 
 const SUGGESTIONS = [
@@ -28,24 +35,11 @@ function isAskResponse(value: unknown): value is AnsweredResponse | RefusedRespo
   );
 }
 
-export function Chat() {
-  const [users, setUsers] = useState<DemoUserPublic[]>([]);
-  const [userId, setUserId] = useState("chro");
+export function Chat({ me }: { me: ChatViewer }) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((body: { users?: DemoUserPublic[] }) => {
-        if (body.users) setUsers(body.users);
-      })
-      .catch(() => {
-        /* switcher stays with the default */
-      });
-  }, []);
 
   useEffect(() => {
     const el = transcriptRef.current;
@@ -54,28 +48,9 @@ export function Chat() {
       el.scrollTop = el.scrollHeight;
     };
     toBottom();
-    // Re-scroll after layout settles (the chart mounts with a fixed height).
     const raf = requestAnimationFrame(toBottom);
     return () => cancelAnimationFrame(raf);
   }, [turns, pending]);
-
-  function switchUser(nextUserId: string) {
-    if (nextUserId === userId) return;
-    setUserId(nextUserId);
-    setInput("");
-    // Never carry one role's answers into another view.
-    setTurns((prev) => {
-      if (prev.length === 0) return [];
-      const next = users.find((u) => u.id === nextUserId);
-      const scope = next ? ` — ${next.scope.toLowerCase()}` : "";
-      return [
-        {
-          role: "system",
-          text: `Now viewing as ${next?.displayName ?? nextUserId}${scope}. Previous results cleared.`,
-        },
-      ];
-    });
-  }
 
   async function ask(question: string) {
     const trimmed = question.trim();
@@ -87,7 +62,7 @@ export function Chat() {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ userId, question: trimmed }),
+        body: JSON.stringify({ question: trimmed }),
       });
       const body: unknown = await res.json().catch(() => null);
       if (!res.ok) {
@@ -109,49 +84,32 @@ export function Chat() {
     }
   }
 
-  const activeUser = users.find((u) => u.id === userId);
-
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Ask Your Hiring Data</h1>
-        <label className={styles.switcher}>
-          Viewing as
-          <select value={userId} onChange={(e) => switchUser(e.target.value)}>
-            {(users.length > 0
-              ? users
-              : [{ id: "chro", displayName: "CHRO", role: "chro", scope: "" }]
-            ).map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div>
+          <h1 className={styles.title}>{me.orgName}</h1>
+          <p className={styles.subtitle}>
+            {me.name} · {me.role} · scoped to {me.scopeLabel}
+          </p>
+        </div>
+        <button
+          type="button"
+          className={styles.signout}
+          onClick={() => void signOut({ redirectTo: "/" })}
+        >
+          Sign out
+        </button>
       </header>
 
       <div className={styles.transcript} ref={transcriptRef}>
         {turns.length === 0 && (
           <div className={styles.empty}>
-            <p>
-              Ask a plain-English question about the synthetic hiring dataset
-              {activeUser ? ` — you're scoped to: ${activeUser.scope.toLowerCase()}.` : "."}
-            </p>
+            <p>Ask a plain-English question about your hiring data.</p>
             <ul>
               {SUGGESTIONS.map((s) => (
                 <li key={s}>
-                  <button
-                    type="button"
-                    onClick={() => ask(s)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--brand)",
-                      cursor: "pointer",
-                      padding: 0,
-                      font: "inherit",
-                    }}
-                  >
+                  <button type="button" className={styles.suggestion} onClick={() => ask(s)}>
                     {s}
                   </button>
                 </li>

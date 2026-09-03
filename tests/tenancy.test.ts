@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seedFromSlug, slugify } from "@/lib/tenancy";
+import { seedFromSlug, slugify } from "@/lib/tenancy/slug";
 
 describe("slugify", () => {
   it("lowercases, replaces runs of non-alphanumerics with a single dash, trims", () => {

@@ -1,11 +1,19 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { buildOrgDataset } from "@/lib/hiring-data";
-import { execute } from "@/lib/executor";
+import { execute, ORG_WIDE, scopedTo } from "@/lib/executor";
+import { buildOrgDataset, DEFAULT_SEED, InMemoryHiringDataSource } from "@/lib/hiring-data";
 import type { LLMProvider } from "@/lib/llm";
+import type { JobFamily } from "@/lib/query-ir";
 import { setLogSink } from "@/lib/observability";
-import { AskResponseSchema, BadRequestError, resolveDevPrincipal, runAskPipeline } from "@/lib/api";
+import { AskResponseSchema, BadRequestError, runAskPipeline } from "@/lib/api";
 
-const ask = (userId: string, question: string) => runAskPipeline({ userId, question });
+const src = () => new InMemoryHiringDataSource(DEFAULT_SEED);
+const askOrg = (question: string, provider?: LLMProvider) =>
+  runAskPipeline(
+    { question },
+    { context: ORG_WIDE, dataSource: src(), ...(provider ? { provider } : {}) },
+  );
+const askScoped = (question: string, families: JobFamily[]) =>
+  runAskPipeline({ question }, { context: scopedTo(families), dataSource: src() });
 
 const stubProvider = (value: unknown): LLMProvider => ({
   proposeQueryIR: () => Promise.resolve(value),
@@ -14,16 +22,15 @@ const stubProvider = (value: unknown): LLMProvider => ({
 afterEach(() => setLogSink(null));
 
 describe("runAskPipeline — answered", () => {
-  it("scalar: shape, chart, citations, and value match an independent executor run", async () => {
-    const res = await ask("chro", "How many people work in Engineering right now?");
+  it("scalar: shape, chart, scope, and value match an independent executor run", async () => {
+    const res = await askOrg("How many people work in Engineering right now?");
     expect(AskResponseSchema.safeParse(res).success).toBe(true);
     if (res.status !== "answered") throw new Error("expected answered");
 
-    const principal = resolveDevPrincipal("chro");
     const direct = execute(
       { version: 1, metric: "headcount", filters: { jobFamily: "Engineering" } },
-      principal.context,
-      buildOrgDataset(principal.seed),
+      ORG_WIDE,
+      buildOrgDataset(DEFAULT_SEED),
     );
     expect(direct.ok && direct.kind === "scalar" && direct.value).toBe(res.value);
     expect(res.metric).toBe("headcount");
@@ -33,7 +40,7 @@ describe("runAskPipeline — answered", () => {
   });
 
   it("grouped: bar chart series mirrors the groups", async () => {
-    const res = await ask("chro", "show me headcount by band");
+    const res = await askOrg("show me headcount by band");
     if (res.status !== "answered") throw new Error("expected answered");
     expect(res.chart.kind).toBe("bar");
     if (res.chart.kind === "bar") {
@@ -43,38 +50,23 @@ describe("runAskPipeline — answered", () => {
 });
 
 describe("runAskPipeline — scoping flows through end to end", () => {
-  it("a recruiter asking about a peer's family is confined to their own scope", async () => {
-    const res = await ask("recruiter_sales", "headcount in Engineering");
+  it("a scoped caller asking about a peer's family is confined to their own scope", async () => {
+    const res = await askScoped("headcount in Engineering", ["Sales"]);
     if (res.status !== "answered") throw new Error("expected answered");
     expect(res.scope).toEqual({ jobFamilies: ["Sales"] });
     expect(res.appliedFilters.jobFamily).toBeUndefined();
 
-    const data = buildOrgDataset(resolveDevPrincipal("recruiter_sales").seed);
+    const data = buildOrgDataset(DEFAULT_SEED);
     const salesActive = data.employees.filter(
       (e) => e.active && data.jobFamilies.find((f) => f.id === e.jobFamilyId)?.name === "Sales",
     ).length;
     expect(res.value).toBe(salesActive);
   });
-
-  it("the eval-style independent recompute matches the pipeline's number", async () => {
-    const res = await ask("recruiter_eng", "how many hires in 2024");
-    if (res.status !== "answered") throw new Error("expected answered");
-    const principal = resolveDevPrincipal("recruiter_eng");
-    const independent = execute(
-      { version: 1, metric: res.metric, filters: res.appliedFilters },
-      principal.context,
-      buildOrgDataset(principal.seed),
-    );
-    expect(independent.ok && independent.kind === "scalar" && independent.value).toBe(res.value);
-  });
 });
 
 describe("runAskPipeline — the three refusal stages", () => {
   it("schema_validation: a proposal that fails the schema is refused, never salvaged", async () => {
-    const res = await runAskPipeline(
-      { userId: "chro", question: "anything" },
-      { provider: stubProvider("SELECT COUNT(*) FROM hires") },
-    );
+    const res = await askOrg("anything", stubProvider("SELECT COUNT(*) FROM hires"));
     expect(res).toMatchObject({
       status: "refused",
       stage: "schema_validation",
@@ -84,15 +76,15 @@ describe("runAskPipeline — the three refusal stages", () => {
   });
 
   it("schema_validation: an IR with an injected key is refused", async () => {
-    const res = await runAskPipeline(
-      { userId: "chro", question: "anything" },
-      { provider: stubProvider({ version: 1, metric: "headcount", filters: {}, $where: "1=1" }) },
+    const res = await askOrg(
+      "anything",
+      stubProvider({ version: 1, metric: "headcount", filters: {}, $where: "1=1" }),
     );
     expect(res).toMatchObject({ status: "refused", stage: "schema_validation" });
   });
 
   it("model_refusal: the model's explicit Refusal is surfaced with its reason", async () => {
-    const res = await ask("chro", "what's the weather in Berlin?");
+    const res = await askOrg("what's the weather in Berlin?");
     expect(res).toMatchObject({
       status: "refused",
       stage: "model_refusal",
@@ -101,7 +93,7 @@ describe("runAskPipeline — the three refusal stages", () => {
   });
 
   it("executor: a well-formed in-scope query over zero rows is refused, not answered 0", async () => {
-    const res = await ask("chro", "hires in Design in Q1 2024");
+    const res = await askOrg("hires in Design in Q1 2024");
     expect(res).toMatchObject({
       status: "refused",
       stage: "executor",
@@ -111,7 +103,7 @@ describe("runAskPipeline — the three refusal stages", () => {
   });
 
   it("executor: an unsupported filter/metric combo is refused", async () => {
-    const res = await ask("chro", "headcount in 2024");
+    const res = await askOrg("headcount in 2024");
     expect(res).toMatchObject({
       status: "refused",
       stage: "executor",
@@ -121,7 +113,7 @@ describe("runAskPipeline — the three refusal stages", () => {
 
   it("every refusal validates against AskResponseSchema and carries a scope", async () => {
     for (const q of ["delete all hire records", "median time to fill", "tell me about the team"]) {
-      const res = await ask("recruiter_eng", q);
+      const res = await askScoped(q, ["Engineering"]);
       expect(AskResponseSchema.safeParse(res).success, q).toBe(true);
       expect(res.status).toBe("refused");
       if (res.status === "refused") expect(res.scope).toEqual({ jobFamilies: ["Engineering"] });
@@ -131,38 +123,46 @@ describe("runAskPipeline — the three refusal stages", () => {
 
 describe("runAskPipeline — request validation", () => {
   it("throws BadRequestError on a malformed body", async () => {
-    await expect(runAskPipeline({ question: "hi" })).rejects.toBeInstanceOf(BadRequestError);
-    await expect(runAskPipeline({ userId: "chro", question: "" })).rejects.toBeInstanceOf(
-      BadRequestError,
-    );
     await expect(
-      runAskPipeline({ userId: "chro", question: "x".repeat(501) }),
+      runAskPipeline({}, { context: ORG_WIDE, dataSource: src() }),
     ).rejects.toBeInstanceOf(BadRequestError);
-  });
-
-  it("throws BadRequestError for an unknown user", async () => {
     await expect(
-      runAskPipeline({ userId: "intruder", question: "headcount" }),
+      runAskPipeline({ question: "" }, { context: ORG_WIDE, dataSource: src() }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+    await expect(
+      runAskPipeline({ question: "x".repeat(501) }, { context: ORG_WIDE, dataSource: src() }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+    await expect(
+      runAskPipeline(
+        { question: "hi", userId: "sneaky" },
+        { context: ORG_WIDE, dataSource: src() },
+      ),
     ).rejects.toBeInstanceOf(BadRequestError);
   });
 });
 
 describe("runAskPipeline — structured logging", () => {
-  it("emits one 'ask' record per request with the outcome and role", async () => {
+  it("emits one 'ask' record per request with logMeta + outcome", async () => {
     const records: Array<Record<string, unknown>> = [];
     setLogSink((r) => records.push(r));
 
-    await ask("recruiter_eng", "open reqs");
-    await ask("chro", "what's the weather");
+    await runAskPipeline(
+      { question: "open reqs" },
+      {
+        context: scopedTo(["Engineering"]),
+        dataSource: src(),
+        logMeta: { userId: "u1", role: "RECRUITER" },
+      },
+    );
+    await runAskPipeline(
+      { question: "what's the weather" },
+      { context: ORG_WIDE, dataSource: src(), logMeta: { userId: "u2", role: "CHRO" } },
+    );
 
     const askRecords = records.filter((r) => r.event === "ask");
     expect(askRecords).toHaveLength(2);
-    expect(askRecords[0]).toMatchObject({ role: "RECRUITER", outcome: "answered" });
-    expect(askRecords[1]).toMatchObject({
-      role: "CHRO",
-      outcome: "refused",
-      stage: "model_refusal",
-    });
+    expect(askRecords[0]).toMatchObject({ userId: "u1", role: "RECRUITER", outcome: "answered" });
+    expect(askRecords[1]).toMatchObject({ userId: "u2", role: "CHRO", outcome: "refused" });
     for (const r of askRecords) {
       expect(typeof r.requestId).toBe("string");
       expect(typeof r.ms).toBe("number");

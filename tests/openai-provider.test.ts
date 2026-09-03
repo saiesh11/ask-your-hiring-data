@@ -3,7 +3,14 @@ import type OpenAI from "openai";
 import { OpenAIProvider } from "@/lib/llm/openai-provider";
 import { getPrompt } from "@/lib/prompt-registry";
 import { runAskPipeline } from "@/lib/api";
+import { ORG_WIDE } from "@/lib/executor";
+import { DEFAULT_SEED, InMemoryHiringDataSource } from "@/lib/hiring-data";
 import { LlmProposalSchema } from "@/lib/query-ir";
+
+const pipelineDeps = () => ({
+  context: ORG_WIDE,
+  dataSource: new InMemoryHiringDataSource(DEFAULT_SEED),
+});
 
 type CreateParams = {
   model: string;
@@ -63,8 +70,8 @@ describe("OpenAIProvider", () => {
     );
     const provider = new OpenAIProvider({ apiKey: "sk-x", client });
     const res = await runAskPipeline(
-      { userId: "chro", question: "engineering headcount" },
-      { provider },
+      { question: "engineering headcount" },
+      { provider, ...pipelineDeps() },
     );
     expect(res.status).toBe("answered");
     if (res.status === "answered") {
@@ -76,7 +83,7 @@ describe("OpenAIProvider", () => {
   it("plugs into the pipeline: a non-JSON completion becomes a schema_validation refusal", async () => {
     const { client } = fakeClient("no.");
     const provider = new OpenAIProvider({ apiKey: "sk-x", client });
-    const res = await runAskPipeline({ userId: "chro", question: "whatever" }, { provider });
+    const res = await runAskPipeline({ question: "whatever" }, { provider, ...pipelineDeps() });
     expect(res).toMatchObject({ status: "refused", stage: "schema_validation" });
   });
 });

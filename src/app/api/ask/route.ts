@@ -1,14 +1,25 @@
 import { BadRequestError, runAskPipeline } from "@/lib/api";
 import { logger } from "@/lib/observability";
+import { NoOrganizationError, requireContext, UnauthenticatedError } from "@/lib/tenancy/context";
 
 /**
- * POST /api/ask — the one analytics endpoint.
- *
- * `runAskPipeline` owns all request/response Zod validation (so the eval runner,
- * which calls it directly, exercises the identical path). This handler only
- * turns JSON-parse and BadRequestError failures into HTTP status codes.
+ * POST /api/ask — the analytics endpoint. The caller's org, role, and
+ * job-family scope come from `requireContext()` (the session), never the body.
  */
 export async function POST(request: Request): Promise<Response> {
+  let ctx;
+  try {
+    ctx = await requireContext();
+  } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return Response.json({ error: "Not signed in." }, { status: 401 });
+    }
+    if (error instanceof NoOrganizationError) {
+      return Response.json({ error: "No organization." }, { status: 403 });
+    }
+    throw error;
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -17,7 +28,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const response = await runAskPipeline(body);
+    const response = await runAskPipeline(body, {
+      context: ctx.executionContext,
+      dataSource: ctx.hiringData,
+      logMeta: { userId: ctx.user.id, orgId: ctx.org.id, role: ctx.membership.role },
+    });
     return Response.json(response, { status: 200 });
   } catch (error) {
     if (error instanceof BadRequestError) {

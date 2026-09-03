@@ -23,21 +23,31 @@
   font-size: 1.05rem;
 }
 
-.switcher {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
+.subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
   color: var(--dim);
 }
 
-.switcher select {
+.signout {
   font: inherit;
-  color: var(--ink);
-  background: var(--paper);
+  font-size: 0.8rem;
+  color: var(--dim);
+  background: none;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 0.2rem 0.4rem;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+}
+
+.suggestion {
+  font: inherit;
+  background: none;
+  border: none;
+  color: var(--brand);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
 }
 
 .transcript {
