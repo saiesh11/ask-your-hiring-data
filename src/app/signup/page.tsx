@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { AuthSplit } from "@/components/auth-split";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -54,42 +54,36 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm items-center px-6 py-10">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Create your workspace</CardTitle>
-          <CardDescription>
-            We&apos;ll seed it with a synthetic hiring dataset to explore.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="grid gap-4">
-            {FIELDS.map(([key, label, type]) => (
-              <div key={key} className="grid gap-2">
-                <Label htmlFor={key}>{label}</Label>
-                <Input
-                  id={key}
-                  type={type}
-                  required
-                  minLength={type === "password" ? 8 : undefined}
-                  value={form[key]}
-                  onChange={set(key)}
-                />
-              </div>
-            ))}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={pending} className="w-full">
-              {pending ? "Creating…" : "Create workspace"}
-            </Button>
-          </form>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-foreground underline underline-offset-4">
-              Log in
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+    <AuthSplit mode="signup">
+      <h1 className="text-xl font-semibold tracking-tight">Create your workspace</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        A synthetic hiring dataset is seeded on arrival.
+      </p>
+      <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+        {FIELDS.map(([key, label, type]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={key}>{label}</Label>
+            <Input
+              id={key}
+              type={type}
+              required
+              minLength={type === "password" ? 8 : undefined}
+              value={form[key]}
+              onChange={set(key)}
+            />
+          </div>
+        ))}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" disabled={pending} className="w-full">
+          {pending ? "Creating…" : "Create workspace"}
+        </Button>
+      </form>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="text-primary underline-offset-4 hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthSplit>
   );
 }

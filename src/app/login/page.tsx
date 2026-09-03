@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { AuthSplit } from "@/components/auth-split";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -29,47 +29,41 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm items-center px-6">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Log in</CardTitle>
-          <CardDescription>Welcome back to Ask Your Hiring Data.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={pending} className="w-full">
-              {pending ? "Logging in…" : "Log in"}
-            </Button>
-          </form>
-          <p className="mt-4 text-sm text-muted-foreground">
-            No account?{" "}
-            <Link href="/signup" className="text-foreground underline underline-offset-4">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+    <AuthSplit mode="login">
+      <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Welcome back.</p>
+      <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" disabled={pending} className="w-full">
+          {pending ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
+      <p className="mt-4 text-sm text-muted-foreground">
+        New here?{" "}
+        <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+          Create a workspace
+        </Link>
+      </p>
+    </AuthSplit>
   );
 }
