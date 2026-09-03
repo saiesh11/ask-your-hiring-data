@@ -131,3 +131,34 @@
     line-height: 1.5;
   }
 }
+
+/* Landing-page entrance. Only animates when motion is welcome; otherwise the
+   elements just render in place (no opacity:0 trap). */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .drop-in {
+    animation: drop-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .rise-in {
+    animation: rise-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
