@@ -1,0 +1,202 @@
+[
+  {
+    "id": "headcount-org",
+    "question": "How many people are currently active across the company?",
+    "userId": "chro",
+    "expected": { "refused": false, "metric": "headcount", "appliedFilters": {}, "value": 49 }
+  },
+  {
+    "id": "headcount-engineering",
+    "question": "What's the headcount in Engineering right now?",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "headcount",
+      "appliedFilters": { "jobFamily": "Engineering" },
+      "value": 10
+    }
+  },
+  {
+    "id": "headcount-by-band",
+    "question": "Show me headcount by band.",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "headcount_by_band",
+      "appliedFilters": {},
+      "groups": [
+        { "key": "Junior", "value": 16 },
+        { "key": "Mid", "value": 12 },
+        { "key": "Senior", "value": 13 },
+        { "key": "Staff", "value": 8 }
+      ]
+    }
+  },
+  {
+    "id": "headcount-by-family",
+    "question": "Break headcount down by job family.",
+    "userId": "chro",
+    "note": "groupBy on a base count metric (not headcount_by_band)",
+    "expected": {
+      "refused": false,
+      "metric": "headcount",
+      "groupBy": "jobFamily",
+      "appliedFilters": {},
+      "groups": [
+        { "key": "Engineering", "value": 10 },
+        { "key": "Sales", "value": 11 },
+        { "key": "Product", "value": 10 },
+        { "key": "Design", "value": 7 },
+        { "key": "Marketing", "value": 11 }
+      ]
+    }
+  },
+  {
+    "id": "open-reqs-org",
+    "question": "How many open requisitions do we have?",
+    "userId": "chro",
+    "expected": { "refused": false, "metric": "open_reqs", "appliedFilters": {}, "value": 18 }
+  },
+  {
+    "id": "open-reqs-by-family",
+    "question": "Open requisitions by job family, please.",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "open_reqs",
+      "groupBy": "jobFamily",
+      "appliedFilters": {},
+      "groups": [
+        { "key": "Engineering", "value": 3 },
+        { "key": "Sales", "value": 3 },
+        { "key": "Product", "value": 5 },
+        { "key": "Design", "value": 3 },
+        { "key": "Marketing", "value": 4 }
+      ]
+    }
+  },
+  {
+    "id": "hires-2024",
+    "question": "How many hires did we make in 2024?",
+    "userId": "chro",
+    "note": "dateRange filter (bare year)",
+    "expected": {
+      "refused": false,
+      "metric": "hire_count",
+      "appliedFilters": { "dateRange": { "from": "2024-01-01", "to": "2024-12-31" } },
+      "value": 10
+    }
+  },
+  {
+    "id": "hires-engineering-2024",
+    "question": "How many hires in Engineering during 2024?",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "hire_count",
+      "appliedFilters": {
+        "jobFamily": "Engineering",
+        "dateRange": { "from": "2024-01-01", "to": "2024-12-31" }
+      },
+      "value": 2
+    }
+  },
+  {
+    "id": "avg-time-to-fill-org",
+    "question": "What's our average time to fill?",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "avg_time_to_fill",
+      "appliedFilters": {},
+      "value": 61.9
+    }
+  },
+  {
+    "id": "avg-time-to-fill-sales",
+    "question": "Average time to fill for Sales roles?",
+    "userId": "chro",
+    "expected": {
+      "refused": false,
+      "metric": "avg_time_to_fill",
+      "appliedFilters": { "jobFamily": "Sales" },
+      "value": 92.5
+    }
+  },
+  {
+    "id": "scope-recruiter-eng-headcount",
+    "question": "How many people are on my team?",
+    "userId": "recruiter_eng",
+    "note": "role scoping: recruiter with no explicit family is scoped to their own",
+    "expected": {
+      "refused": false,
+      "metric": "headcount",
+      "appliedFilters": { "jobFamily": "Engineering" },
+      "value": 10
+    }
+  },
+  {
+    "id": "scope-recruiter-sales-override",
+    "question": "What's the headcount in Engineering?",
+    "userId": "recruiter_sales",
+    "note": "role scoping OVERRIDE: a Sales recruiter asking about Engineering is forced back to Sales",
+    "expected": {
+      "refused": false,
+      "metric": "headcount",
+      "appliedFilters": { "jobFamily": "Sales" },
+      "value": 11
+    }
+  },
+  {
+    "id": "scope-recruiter-eng-open-reqs",
+    "question": "How many open roles do we have?",
+    "userId": "recruiter_eng",
+    "expected": {
+      "refused": false,
+      "metric": "open_reqs",
+      "appliedFilters": { "jobFamily": "Engineering" },
+      "value": 3
+    }
+  },
+  {
+    "id": "scope-recruiter-sales-hires-2024",
+    "question": "How many hires did we make in 2024?",
+    "userId": "recruiter_sales",
+    "note": "role scoping + dateRange together",
+    "expected": {
+      "refused": false,
+      "metric": "hire_count",
+      "appliedFilters": {
+        "jobFamily": "Sales",
+        "dateRange": { "from": "2024-01-01", "to": "2024-12-31" }
+      },
+      "value": 1
+    }
+  },
+  {
+    "id": "refuse-off-topic",
+    "question": "What's the weather in Berlin today?",
+    "userId": "chro",
+    "expected": { "refused": true, "stage": "model_refusal", "reason": "out_of_scope" }
+  },
+  {
+    "id": "refuse-write-intent-with-metric-keyword",
+    "question": "Delete all headcount records for Design.",
+    "userId": "chro",
+    "note": "destructive intent phrased with a metric keyword must not parse to headcount",
+    "expected": { "refused": true, "stage": "model_refusal", "reason": "out_of_scope" }
+  },
+  {
+    "id": "refuse-no-matching-records",
+    "question": "How many hires in Design in Q1 2024?",
+    "userId": "chro",
+    "note": "well-formed, in scope, zero matching rows — a distinct executor refusal",
+    "expected": { "refused": true, "stage": "executor", "reason": "no_matching_records" }
+  },
+  {
+    "id": "refuse-unsupported-metric",
+    "question": "What's the median time to fill?",
+    "userId": "chro",
+    "expected": { "refused": true, "stage": "model_refusal", "reason": "unsupported_metric" }
+  }
+]
