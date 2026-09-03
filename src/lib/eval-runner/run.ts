@@ -2,7 +2,15 @@ import evalSetRaw from "./eval-set.json";
 import { EvalSetSchema, type EvalCase } from "./schema";
 import { runAskPipeline } from "@/lib/api";
 import { execute, resolveSession } from "@/lib/executor";
+import { getLlmProvider } from "@/lib/llm";
 import type { QueryIR } from "@/lib/query-ir";
+
+/**
+ * The eval gate is a deterministic regression check, so it is pinned to the
+ * MockProvider regardless of the ambient environment — a network model would
+ * make the gate non-deterministic and could bill the user on `pnpm eval`.
+ */
+const EVAL_PROVIDER = getLlmProvider({});
 
 /**
  * Runs each eval case through the EXACT pipeline the API route uses, then — for
@@ -50,7 +58,7 @@ function equal(a: unknown, b: unknown): boolean {
 export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
   const { id, question, userId, expected } = evalCase;
   const failures: string[] = [];
-  const response = await runAskPipeline({ userId, question });
+  const response = await runAskPipeline({ userId, question }, { provider: EVAL_PROVIDER });
 
   if (expected.refused) {
     if (response.status !== "refused") {

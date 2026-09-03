@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getLlmProvider } from "@/lib/llm";
 import { MockProvider } from "@/lib/llm/mock-provider";
+import { OpenAIProvider } from "@/lib/llm/openai-provider";
 import { LlmProposalSchema, interpretLlmProposal } from "@/lib/query-ir";
 
 const mock = new MockProvider();
@@ -12,9 +13,11 @@ describe("provider factory", () => {
     expect(getLlmProvider({ OPENAI_API_KEY: "  " })).toBeInstanceOf(MockProvider);
   });
 
-  it("fails loudly (does not silently downgrade) when a key is set but OpenAIProvider is not wired", () => {
-    // TODO(step-9): once OpenAIProvider exists, assert `instanceof OpenAIProvider` here.
-    expect(() => getLlmProvider({ OPENAI_API_KEY: "sk-test-123" })).toThrow(/OpenAIProvider/);
+  it("returns the OpenAIProvider when OPENAI_API_KEY is set", () => {
+    expect(getLlmProvider({ OPENAI_API_KEY: "sk-test-123" })).toBeInstanceOf(OpenAIProvider);
+    expect(
+      getLlmProvider({ OPENAI_API_KEY: "sk-test-123", OPENAI_MODEL: "gpt-4o" }),
+    ).toBeInstanceOf(OpenAIProvider);
   });
 });
 
