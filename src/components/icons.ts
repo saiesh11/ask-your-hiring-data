@@ -26,4 +26,5 @@ export {
   TrendUp01 as TrendUpIcon,
   ArrowUp as ArrowUpIcon,
   ArrowDown as ArrowDownIcon,
+  ArrowLeft as BackIcon,
 } from "@untitled-ui/icons-react";

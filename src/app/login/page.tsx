@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { BackIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,57 +29,66 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden px-6">
+    <main className="relative flex min-h-dvh flex-col overflow-hidden">
       {/* ambient wash so the frosted panel has something to catch */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 -left-24 size-[440px] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -right-24 -bottom-24 size-[440px] rounded-full bg-primary/[0.06] blur-3xl" />
+        <div className="absolute -top-32 -left-32 size-[480px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -right-32 -bottom-32 size-[480px] rounded-full bg-primary/[0.06] blur-3xl" />
       </div>
 
-      <Link
-        href="/"
-        className="absolute top-6 left-6 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ask your hiring data
-      </Link>
-
-      {/* the glass box: contained, translucent gray, blurred */}
-      <div className="relative w-full max-w-sm rounded-2xl border bg-card/60 p-8 shadow-2xl backdrop-blur-xl">
-        <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
-
-        <form onSubmit={onSubmit} className="mt-8 grid gap-5">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={pending} className="mt-1 w-full">
-            {pending ? "Signing in…" : "Sign in"}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-sm text-muted-foreground">
-          New here?{" "}
-          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-            Create a workspace
+      <header className="relative z-10 p-6">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <Link href="/">
+            <BackIcon className="size-4" />
+            Back
           </Link>
-        </p>
+        </Button>
+      </header>
+
+      <div className="relative z-10 flex flex-1 items-center justify-center px-6 pb-16">
+        {/* the glass box: contained, translucent grey, blurred, roomy */}
+        <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.055] p-10 shadow-2xl backdrop-blur-2xl">
+          <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
+
+          <form onSubmit={onSubmit} className="mt-9 grid gap-6">
+            <div className="grid gap-2.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={pending} className="mt-2 w-full">
+              {pending ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
+
+          <p className="mt-7 text-sm text-muted-foreground">
+            New here?{" "}
+            <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+              Create a workspace
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );
