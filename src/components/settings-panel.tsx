@@ -32,26 +32,27 @@ export function SettingsPanel(props: { name: string; slug: string; canManage: bo
   }
 
   return (
-    <PageShell title="Settings" description="Your workspace.">
-      <section className="max-w-lg overflow-hidden rounded-xl border bg-card">
-        <div className="border-b px-5 py-3.5">
+    <PageShell title="Settings">
+      <section className="overflow-hidden rounded-xl border bg-card">
+        <div className="border-b px-6 py-4">
           <SectionLabel>Organization</SectionLabel>
         </div>
-        <form onSubmit={save} className="grid gap-5 p-5">
-          <div className="grid gap-2">
+        <form onSubmit={save} className="grid gap-7 p-6 sm:p-8">
+          <div className="grid gap-2.5">
             <Label htmlFor="org-name">Name</Label>
             <Input
               id="org-name"
+              className="h-11 max-w-md"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={!props.canManage}
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2.5">
             <Label htmlFor="org-slug">Slug</Label>
             <Input
               id="org-slug"
-              className="font-mono text-sm"
+              className="h-11 max-w-md font-mono text-sm"
               value={props.slug}
               disabled
               readOnly
@@ -61,6 +62,7 @@ export function SettingsPanel(props: { name: string; slug: string; canManage: bo
           {props.canManage && (
             <Button
               type="submit"
+              size="lg"
               className="justify-self-start"
               disabled={pending || name.trim() === props.name}
             >
