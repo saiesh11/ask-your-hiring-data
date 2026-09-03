@@ -94,14 +94,6 @@ export default function LandingPage() {
               Plain-English questions over a read-only hiring dataset. Grounded, role-scoped answers
               with a chart — the model proposes a validated query, code decides.
             </p>
-            <div className="drop-in mt-8 flex gap-3" style={{ animationDelay: "200ms" }}>
-              <Button asChild size="lg">
-                <Link href="/signup">Create a workspace</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/login">See an example</Link>
-              </Button>
-            </div>
           </div>
 
           {/* answer-card mock */}
