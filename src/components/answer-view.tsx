@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
 import { MetricChart } from "./metric-chart";
 
-/** Renders one assistant turn — a grounded answer or an explicit refusal. */
 export function AnswerView({ response }: { response: AnsweredResponse | RefusedResponse }) {
-  if (response.status === "refused") {
-    return <RefusalView response={response} />;
-  }
-  return <AnsweredView response={response} />;
+  return response.status === "refused" ? (
+    <RefusalView response={response} />
+  ) : (
+    <AnsweredView response={response} />
+  );
 }
 
 function AnsweredView({ response }: { response: AnsweredResponse }) {
@@ -17,10 +18,10 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
   const { citations } = response;
 
   return (
-    <div data-testid="answered">
-      <p style={{ margin: "0 0 0.75rem", fontWeight: 500 }}>{response.summary}</p>
-      <MetricChart chart={response.chart} />
-      <div style={{ marginTop: "0.5rem", fontSize: 13, color: "var(--muted)" }}>
+    <div data-testid="answered" className="flex flex-col gap-3">
+      <p className="text-sm leading-relaxed font-medium">{response.summary}</p>
+      <MetricChart response={response} />
+      <div className="text-[13px] text-muted-foreground">
         <span data-testid="grounded-line">
           Grounded in {citations.recordCount} record{citations.recordCount === 1 ? "" : "s"}
         </span>
@@ -30,15 +31,8 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
             {" · "}
             <button
               type="button"
+              className="text-primary hover:underline"
               onClick={() => setShowRecords((v) => !v)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--accent)",
-                cursor: "pointer",
-                padding: 0,
-                font: "inherit",
-              }}
             >
               {showRecords ? "hide records" : "show records"}
             </button>
@@ -46,17 +40,7 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
         )}
       </div>
       {showRecords && (
-        <code
-          style={{
-            display: "block",
-            marginTop: "0.5rem",
-            padding: "0.5rem",
-            fontSize: 12,
-            background: "var(--border)",
-            borderRadius: 6,
-            wordBreak: "break-all",
-          }}
-        >
+        <code className="mt-2 block rounded-md bg-muted p-2 text-xs break-all">
           {citations.recordIds.join(", ")}
         </code>
       )}
@@ -67,19 +51,10 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
 function RefusalView({ response }: { response: RefusedResponse }) {
   return (
     <div data-testid="refused">
-      <p style={{ margin: "0 0 0.5rem" }}>{response.message}</p>
-      <span
-        style={{
-          display: "inline-block",
-          fontSize: 12,
-          color: "var(--muted)",
-          border: "1px solid var(--border)",
-          borderRadius: 999,
-          padding: "0.1rem 0.55rem",
-        }}
-      >
+      <p className="mb-2">{response.message}</p>
+      <Badge variant="outline" className="text-muted-foreground">
         {response.reason.replace(/_/g, " ")} · {response.stage.replace(/_/g, " ")}
-      </span>
+      </Badge>
     </div>
   );
 }

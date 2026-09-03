@@ -4,7 +4,18 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AnswerView } from "@/components/answer-view";
 import { Chat } from "@/components/chat";
+import { ChatStoreProvider } from "@/components/chat-store";
 import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+
+const renderChat = () => render(<Chat />, { wrapper: ChatStoreProvider });
+
+afterEach(() => {
+  try {
+    localStorage.clear();
+  } catch {
+    /* ignore */
+  }
+});
 
 afterEach(() => {
   cleanup();
@@ -59,91 +70,44 @@ describe("AnswerView", () => {
 });
 
 describe("Chat", () => {
-  it("submits a question and renders the answer from /api/ask", async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((url: string | URL) => {
-        const target = String(url);
-        const body = target.includes("/api/users")
-          ? {
-              users: [
-                {
-                  id: "chro",
-                  displayName: "Casey — CHRO",
-                  role: "chro",
-                  scope: "Organization-wide",
-                },
-              ],
-            }
-          : answered;
-        return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
-      }),
-    );
+  it("shows suggestions in the empty state", () => {
+    renderChat();
+    expect(screen.getByText("Headcount by band")).toBeInTheDocument();
+  });
 
-    render(<Chat />);
+  it("posts { userId, question } and renders the answer", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn((_url: string | URL, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify(answered), { status: 200 })),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderChat();
     await user.type(screen.getByLabelText("Question"), "headcount in engineering");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 
     expect(await screen.findByTestId("answered")).toBeInTheDocument();
     expect(screen.getByText(/Headcount — Engineering: 10/)).toBeInTheDocument();
-  });
-
-  it("clears the transcript when the role changes (no cross-role leakage)", async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((url: string | URL) => {
-        const target = String(url);
-        const body = target.includes("/api/users")
-          ? {
-              users: [
-                {
-                  id: "chro",
-                  displayName: "Casey — CHRO",
-                  role: "chro",
-                  scope: "Organization-wide",
-                },
-                {
-                  id: "recruiter_eng",
-                  displayName: "Riley — Recruiter (Engineering)",
-                  role: "recruiter",
-                  scope: "Engineering only",
-                },
-              ],
-            }
-          : answered;
-        return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
-      }),
-    );
-
-    render(<Chat />);
-    await user.type(screen.getByLabelText("Question"), "headcount");
-    await user.click(screen.getByRole("button", { name: "Ask" }));
-    expect(await screen.findByTestId("answered")).toBeInTheDocument();
-
-    await user.selectOptions(screen.getByRole("combobox"), "recruiter_eng");
-
-    expect(screen.queryByTestId("answered")).not.toBeInTheDocument();
-    expect(screen.getByText(/Previous results cleared/)).toBeInTheDocument();
+    const call = fetchMock.mock.calls[0];
+    expect(call?.[0]).toBe("/api/ask");
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({
+      userId: "chro",
+      question: "headcount in engineering",
+    });
   });
 
   it("shows an error bubble when /api/ask returns a 400", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       "fetch",
-      vi.fn((url: string | URL) => {
-        const target = String(url);
-        if (target.includes("/api/users")) {
-          return Promise.resolve(new Response(JSON.stringify({ users: [] }), { status: 200 }));
-        }
-        return Promise.resolve(
+      vi.fn(() =>
+        Promise.resolve(
           new Response(JSON.stringify({ error: "Invalid request body." }), { status: 400 }),
-        );
-      }),
+        ),
+      ),
     );
 
-    render(<Chat />);
+    renderChat();
     await user.type(screen.getByLabelText("Question"), "anything");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 

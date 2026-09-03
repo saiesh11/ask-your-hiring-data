@@ -8,7 +8,32 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Keep ESLint focused on correctness; Prettier owns formatting.
   eslintConfigPrettier,
-  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"]),
+  {
+    rules: {
+      // Allow intentionally-unused identifiers when prefixed with `_`
+      // (e.g. mock signatures that must match a real API but ignore args).
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "src/generated/**",
+    // Vendored shadcn/ui primitives — copied verbatim from the generator,
+    // not held to this project's lint rules (they trip newer react-hooks rules).
+    "src/components/ui/**",
+    "src/hooks/**",
+    "next-env.d.ts",
+  ]),
 ]);
 
 export default eslintConfig;

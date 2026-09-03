@@ -1,19 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AnsweredResponse, DemoUserPublic, RefusedResponse } from "@/lib/api";
+import { SendIcon, SparkIcon } from "@/components/icons";
+import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { AnswerView } from "./answer-view";
-import styles from "./chat.module.css";
-
-type Turn =
-  | { role: "user"; text: string }
-  | { role: "assistant"; response: AnsweredResponse | RefusedResponse }
-  | { role: "system"; text: string }
-  | { role: "error"; text: string };
+import { useChatStore } from "./chat-store";
 
 const SUGGESTIONS = [
   "How many people are active across the company?",
-  "Show me headcount by band",
+  "Headcount by band",
   "Open requisitions by job family",
   "Average time to fill for Sales roles",
   "How many hires did we make in 2024?",
@@ -29,165 +25,160 @@ function isAskResponse(value: unknown): value is AnsweredResponse | RefusedRespo
 }
 
 export function Chat() {
-  const [users, setUsers] = useState<DemoUserPublic[]>([]);
-  const [userId, setUserId] = useState("chro");
+  const { activeTurns, appendTurn, activeUserId } = useChatStore();
   const [input, setInput] = useState("");
-  const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState(false);
-  const transcriptRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const empty = activeTurns.length === 0 && !pending;
 
   useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((body: { users?: DemoUserPublic[] }) => {
-        if (body.users) setUsers(body.users);
-      })
-      .catch(() => {
-        /* switcher stays with the default */
-      });
-  }, []);
-
-  useEffect(() => {
-    const el = transcriptRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const toBottom = () => {
-      el.scrollTop = el.scrollHeight;
-    };
-    toBottom();
-    // Re-scroll after layout settles (the chart mounts with a fixed height).
-    const raf = requestAnimationFrame(toBottom);
-    return () => cancelAnimationFrame(raf);
-  }, [turns, pending]);
+    el.scrollTop = el.scrollHeight;
+  }, [activeTurns, pending]);
 
-  function switchUser(nextUserId: string) {
-    if (nextUserId === userId) return;
-    setUserId(nextUserId);
-    setInput("");
-    // Never carry one role's answers into another view.
-    setTurns((prev) => {
-      if (prev.length === 0) return [];
-      const next = users.find((u) => u.id === nextUserId);
-      const scope = next ? ` — ${next.scope.toLowerCase()}` : "";
-      return [
-        {
-          role: "system",
-          text: `Now viewing as ${next?.displayName ?? nextUserId}${scope}. Previous results cleared.`,
-        },
-      ];
-    });
+  function autosize() {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }
 
   async function ask(question: string) {
     const trimmed = question.trim();
     if (!trimmed || pending) return;
     setInput("");
-    setTurns((prev) => [...prev, { role: "user", text: trimmed }]);
+    requestAnimationFrame(autosize);
+    appendTurn({ role: "user", text: trimmed });
     setPending(true);
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ userId, question: trimmed }),
+        body: JSON.stringify({ userId: activeUserId, question: trimmed }),
       });
       const body: unknown = await res.json().catch(() => null);
       if (!res.ok) {
-        const message =
-          (body as { error?: string } | null)?.error ?? `Request failed (${res.status}).`;
-        setTurns((prev) => [...prev, { role: "error", text: message }]);
+        appendTurn({
+          role: "error",
+          text: (body as { error?: string } | null)?.error ?? `Request failed (${res.status}).`,
+        });
       } else if (isAskResponse(body)) {
-        setTurns((prev) => [...prev, { role: "assistant", response: body }]);
+        appendTurn({ role: "assistant", response: body });
       } else {
-        setTurns((prev) => [
-          ...prev,
-          { role: "error", text: "Unexpected response from the server." },
-        ]);
+        appendTurn({ role: "error", text: "Unexpected response from the server." });
       }
     } catch {
-      setTurns((prev) => [...prev, { role: "error", text: "Network error." }]);
+      appendTurn({ role: "error", text: "Network error." });
     } finally {
       setPending(false);
     }
   }
 
-  const activeUser = users.find((u) => u.id === userId);
+  const composer = (
+    <form
+      className="w-full"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void ask(input);
+      }}
+    >
+      <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm transition-colors focus-within:border-ring">
+        <textarea
+          ref={taRef}
+          rows={1}
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            autosize();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void ask(input);
+            }
+          }}
+          placeholder="Ask about your hiring data…"
+          aria-label="Question"
+          className="max-h-[200px] min-h-[24px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+        />
+        <Button
+          type="submit"
+          size="icon"
+          className="size-9 shrink-0 rounded-xl"
+          disabled={pending || !input.trim()}
+        >
+          <SendIcon className="size-4" />
+          <span className="sr-only">Ask</span>
+        </Button>
+      </div>
+    </form>
+  );
+
+  if (empty) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-7 px-4">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="grid size-11 place-items-center rounded-2xl border bg-card text-primary">
+            <SparkIcon className="size-5" />
+          </span>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance">
+            Ask your hiring data
+          </h1>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Plain-English questions. Grounded, role-scoped answers with a chart.
+          </p>
+        </div>
+        {composer}
+        <div className="flex flex-wrap justify-center gap-2">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => void ask(s)}
+              className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.shell}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Ask Your Hiring Data</h1>
-        <label className={styles.switcher}>
-          Viewing as
-          <select value={userId} onChange={(e) => switchUser(e.target.value)}>
-            {(users.length > 0
-              ? users
-              : [{ id: "chro", displayName: "CHRO", role: "chro", scope: "" }]
-            ).map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
-      </header>
-
-      <div className={styles.transcript} ref={transcriptRef}>
-        {turns.length === 0 && (
-          <div className={styles.empty}>
-            <p>
-              Ask a plain-English question about the synthetic hiring dataset
-              {activeUser ? ` — you're scoped to: ${activeUser.scope.toLowerCase()}.` : "."}
-            </p>
-            <ul>
-              {SUGGESTIONS.map((s) => (
-                <li key={s}>
-                  <button
-                    type="button"
-                    onClick={() => ask(s)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--accent)",
-                      cursor: "pointer",
-                      padding: 0,
-                      font: "inherit",
-                    }}
-                  >
-                    {s}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {turns.map((turn, i) => (
-          <div key={i} className={`${styles.row} ${styles[turn.role]}`}>
-            <div className={styles.bubble}>
-              {turn.role === "assistant" ? <AnswerView response={turn.response} /> : turn.text}
+    <div className="flex h-full flex-col">
+      {/* full-width scroll — the scrollbar sits at the far right of the panel */}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
+          {activeTurns.map((turn, i) => (
+            <div key={i} className={turn.role === "user" ? "flex justify-end" : ""}>
+              {turn.role === "user" ? (
+                <div className="max-w-[80%] rounded-2xl bg-muted px-3.5 py-2 text-sm">
+                  {turn.text}
+                </div>
+              ) : turn.role === "error" ? (
+                <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive">
+                  {turn.text}
+                </div>
+              ) : (
+                <div className="rounded-xl border bg-card p-4">
+                  <AnswerView response={turn.response} />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-
-        {pending && <div className={styles.pending}>Thinking…</div>}
+          ))}
+          {pending && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <SparkIcon className="size-4 animate-pulse text-primary" /> Analyzing…
+            </div>
+          )}
+        </div>
       </div>
-
-      <form
-        className={styles.form}
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(input);
-        }}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="e.g. How many senior hires did we make in Q2 2024?"
-          aria-label="Question"
-        />
-        <button type="submit" disabled={pending || input.trim().length === 0}>
-          Ask
-        </button>
-      </form>
+      <div className="shrink-0">
+        <div className="mx-auto max-w-3xl px-4 pt-2 pb-4">{composer}</div>
+      </div>
     </div>
   );
 }
