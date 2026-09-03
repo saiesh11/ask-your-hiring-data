@@ -98,22 +98,24 @@ export default function SignupPage() {
       </header>
 
       <div className="relative z-10 grid flex-1 lg:grid-cols-12">
-        {/* LEFT — slim, plain text */}
-        <aside className="hidden flex-col justify-center gap-7 border-r border-white/10 bg-white/[0.025] px-10 backdrop-blur-xl lg:col-span-4 lg:flex">
-          <span className="grid size-10 place-items-center rounded-xl border bg-card text-primary">
-            <SparkIcon className="size-5" />
-          </span>
-          <p className="max-w-xs text-lg font-medium text-balance">
-            Grounded, role-scoped answers over your hiring data.
-          </p>
-          <ul className="flex max-w-xs flex-col gap-3 text-sm text-muted-foreground">
-            {VALUE.map((v) => (
-              <li key={v} className="flex gap-2.5">
-                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
-                {v}
-              </li>
-            ))}
-          </ul>
+        {/* LEFT — slim text, centred, with an inset divider */}
+        <aside className="relative hidden flex-col items-center justify-center bg-white/[0.025] px-10 backdrop-blur-xl after:absolute after:inset-y-14 after:right-0 after:w-px after:bg-white/10 after:content-[''] lg:col-span-4 lg:flex">
+          <div className="flex w-full max-w-sm flex-col gap-8">
+            <span className="grid size-11 place-items-center rounded-xl border bg-card text-primary">
+              <SparkIcon className="size-5" />
+            </span>
+            <p className="text-2xl leading-snug font-medium text-balance">
+              Grounded, role-scoped answers over your hiring data.
+            </p>
+            <ul className="flex flex-col gap-4 text-base text-muted-foreground">
+              {VALUE.map((v) => (
+                <li key={v} className="flex gap-3">
+                  <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {v}
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
 
         {/* RIGHT — the form, roomy frosted panel */}
