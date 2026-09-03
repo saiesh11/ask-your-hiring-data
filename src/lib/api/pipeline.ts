@@ -71,16 +71,39 @@ export async function runAskPipeline(
   const rawProposal = await provider.proposeQueryIR(question);
   const interpretation = interpretLlmProposal(rawProposal);
 
+  // The resolved data scope for this caller — logged on every request so the
+  // security boundary's decision is auditable, not just implied.
+  const scope = session.role === "chro" ? "org_wide" : session.jobFamilyName;
+
+  // What the model proposed, before any deterministic code ran. Distinguishes
+  // "model declined" from "model produced something un-parseable" from a real IR.
+  const proposal =
+    interpretation.kind === "query_ir"
+      ? {
+          kind: "query_ir",
+          metric: interpretation.queryIR.metric,
+          groupBy: interpretation.queryIR.groupBy ?? null,
+        }
+      : interpretation.kind === "refusal"
+        ? { kind: "refusal", reason: interpretation.refusal.reason }
+        : { kind: "invalid", issues: interpretation.issues };
+
   const finish = (response: AskResponse): AskResponse => {
     const validated = AskResponseSchema.parse(response); // never ship a malformed response
     logger.info("ask", {
       requestId,
       userId,
       role: session.role,
+      scope,
+      proposal,
       outcome: validated.status,
       ...(validated.status === "refused"
         ? { stage: validated.stage, reason: validated.reason }
-        : { metric: validated.metric, recordCount: validated.citations.recordCount }),
+        : {
+            metric: validated.metric,
+            appliedFilters: validated.appliedFilters,
+            recordCount: validated.citations.recordCount,
+          }),
       ms: Date.now() - startedAt,
     });
     return validated;

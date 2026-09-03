@@ -152,9 +152,17 @@ describe("runAskPipeline — structured logging", () => {
 
     const askRecords = records.filter((r) => r.event === "ask");
     expect(askRecords).toHaveLength(2);
-    expect(askRecords[0]).toMatchObject({ role: "recruiter", outcome: "answered" });
+    expect(askRecords[0]).toMatchObject({
+      role: "recruiter",
+      scope: "Engineering", // the resolved data scope is on every line
+      proposal: { kind: "query_ir", metric: "open_reqs", groupBy: null },
+      outcome: "answered",
+      metric: "open_reqs",
+    });
     expect(askRecords[1]).toMatchObject({
       role: "chro",
+      scope: "org_wide",
+      proposal: { kind: "refusal", reason: "out_of_scope" },
       outcome: "refused",
       stage: "model_refusal",
     });

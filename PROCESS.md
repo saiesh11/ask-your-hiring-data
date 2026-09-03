@@ -18,10 +18,15 @@ fixture file with this copy of the assessment, so:
 - **Three demo principals, no auth.** `chro` (org-wide), `recruiter_eng`, `recruiter_sales`
   (each confined to one job family). Selected in the UI; the API takes `userId` in the body and
   resolves the principal server-side. Real authentication is out of scope for the brief.
-- **"Constrained to their own job requisitions" is read as "their job family."** The dataset's
-  unit of ownership is the job family (Engineering, Sales, …), not an individual req with an
-  owner field. A recruiter is scoped to their family; per-req ownership would need an `ownerId`
-  on the job rows and is a small extension.
+- **"Constrained to their own job requisitions" is read as "their job family."** The brief's
+  phrasing is illustrative ("e.g. a Recruiter…"); the principle it's testing is _server-side,
+  role-based data scoping_. Per-requisition ownership (an `ownerId` on job rows) was considered
+  and set aside: it only maps to 2 of the 5 metrics — `open_reqs` and `avg_time_to_fill` are
+  about requisitions, but `headcount`, `hire_count` and `headcount_by_band` are about
+  **employees**, who don't belong to a req. Scoping recruiters by **job family** is the one unit
+  that applies uniformly to every metric, so the boundary stays a single rule
+  (`scopeFilters`) rather than a per-metric special case. Adding req ownership on top is a
+  contained extension if the product later needs it.
 - **A fixed analytics vocabulary is a feature.** Five metrics (`hire_count`, `open_reqs`,
   `headcount`, `avg_time_to_fill`, `headcount_by_band`), two group-by dimensions, three filters.
   The model picks from menus; it cannot name a field that doesn't exist. This shrinks the
