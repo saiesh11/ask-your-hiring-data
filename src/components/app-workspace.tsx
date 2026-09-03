@@ -18,10 +18,10 @@ function SidebarEdgeTab() {
         type="button"
         onClick={toggleSidebar}
         aria-label={state === "collapsed" ? "Open sidebar" : "Close sidebar"}
-        className="pointer-events-auto flex h-16 w-4 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+        className="pointer-events-auto flex h-24 w-5 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground shadow-sm transition-[width,background-color,color] hover:w-6 hover:bg-sidebar-accent hover:text-foreground"
       >
         <CollapseIcon
-          className={cn("size-3.5 transition-transform", state === "collapsed" && "rotate-180")}
+          className={cn("size-4 transition-transform", state === "collapsed" && "rotate-180")}
         />
       </button>
     </div>

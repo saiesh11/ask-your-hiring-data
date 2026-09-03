@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -40,8 +41,17 @@ const Ctx = createContext<ChatStore | null>(null);
 
 export function ChatStoreProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveIdState] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+
+  // The source of truth for "which conversation appends target". A ref, not
+  // state, so an in-flight ask() that captured an older render still writes the
+  // model's answer to the conversation its question created.
+  const activeIdRef = useRef<string | null>(null);
+  const setActiveId = useCallback((id: string | null) => {
+    activeIdRef.current = id;
+    setActiveIdState(id);
+  }, []);
 
   useEffect(() => {
     // Mount-time hydration from localStorage: server and first client render
@@ -62,7 +72,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
+  }, [setActiveId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -73,12 +83,15 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [conversations, activeId, hydrated]);
 
-  const newConversation = useCallback(() => setActiveId(null), []);
-  const selectConversation = useCallback((id: string) => setActiveId(id), []);
-  const deleteConversation = useCallback((id: string) => {
-    setConversations((cs) => cs.filter((c) => c.id !== id));
-    setActiveId((cur) => (cur === id ? null : cur));
-  }, []);
+  const newConversation = useCallback(() => setActiveId(null), [setActiveId]);
+  const selectConversation = useCallback((id: string) => setActiveId(id), [setActiveId]);
+  const deleteConversation = useCallback(
+    (id: string) => {
+      setConversations((cs) => cs.filter((c) => c.id !== id));
+      if (activeIdRef.current === id) setActiveId(null);
+    },
+    [setActiveId],
+  );
   const renameConversation = useCallback((id: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -89,21 +102,22 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
 
   const appendTurn = useCallback(
     (turn: Turn) => {
-      const existing = activeId ? conversations.find((c) => c.id === activeId) : undefined;
-      if (existing) {
+      const target = activeIdRef.current;
+      if (target) {
         setConversations((cs) =>
           cs.map((c) =>
-            c.id === existing.id ? { ...c, turns: [...c.turns, turn], updatedAt: Date.now() } : c,
+            c.id === target ? { ...c, turns: [...c.turns, turn], updatedAt: Date.now() } : c,
           ),
         );
         return;
       }
       const id = crypto.randomUUID();
+      activeIdRef.current = id; // synchronous, so the next append in this ask() lands here
+      setActiveId(id);
       const title = turn.role === "user" ? turn.text.slice(0, 60) || NEW_TITLE : NEW_TITLE;
       setConversations((cs) => [{ id, title, turns: [turn], updatedAt: Date.now() }, ...cs]);
-      setActiveId(id);
     },
-    [activeId, conversations],
+    [setActiveId],
   );
 
   const activeTurns = useMemo(
