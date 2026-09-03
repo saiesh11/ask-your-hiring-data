@@ -1,13 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { CollapseIcon, HomeIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar, type SidebarViewer } from "./app-sidebar";
-import { ChatStoreProvider } from "./chat-store";
+import { ChatStoreProvider, useChatStore } from "./chat-store";
 
 /** A pull-tab on the sidebar's edge that collapses / expands it. */
 function SidebarEdgeTab() {
@@ -26,6 +26,27 @@ function SidebarEdgeTab() {
   );
 }
 
+/** Home = a fresh chat on /app, not the marketing landing page. */
+function HomeButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { newConversation } = useChatStore();
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="gap-1.5 text-muted-foreground hover:text-foreground"
+      onClick={() => {
+        newConversation();
+        if (pathname !== "/app") router.push("/app");
+      }}
+    >
+      <HomeIcon className="size-4" />
+      Home
+    </Button>
+  );
+}
+
 export function AppWorkspace({ viewer, children }: { viewer: SidebarViewer; children: ReactNode }) {
   return (
     <ChatStoreProvider>
@@ -34,17 +55,7 @@ export function AppWorkspace({ viewer, children }: { viewer: SidebarViewer; chil
         <SidebarInset className="relative h-dvh">
           <SidebarEdgeTab />
           <header className="flex h-12 shrink-0 items-center px-3">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <Link href="/">
-                <HomeIcon className="size-4" />
-                Home
-              </Link>
-            </Button>
+            <HomeButton />
           </header>
           <div className="min-h-0 flex-1">{children}</div>
         </SidebarInset>
