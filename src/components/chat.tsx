@@ -146,7 +146,7 @@ export function Chat() {
                     style={{
                       background: "none",
                       border: "none",
-                      color: "var(--accent)",
+                      color: "var(--brand)",
                       cursor: "pointer",
                       padding: 0,
                       font: "inherit",

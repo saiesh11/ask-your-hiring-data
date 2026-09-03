@@ -17,24 +17,24 @@ export function MetricChart({ chart }: { chart: ChartPayload }) {
     <div data-testid="metric-chart" style={{ width: "100%", height: 220 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 12, right: 12, bottom: 4, left: -8 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-          <XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted)" }} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line)" />
+          <XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--dim)" }} />
           <YAxis
             allowDecimals={chart.unit === "days"}
             width={44}
-            tick={{ fontSize: 12, fill: "var(--muted)" }}
+            tick={{ fontSize: 12, fill: "var(--dim)" }}
           />
           <Tooltip
-            cursor={{ fill: "var(--border)", opacity: 0.3 }}
+            cursor={{ fill: "var(--line)", opacity: 0.3 }}
             contentStyle={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
+              background: "var(--paper)",
+              border: "1px solid var(--line)",
               borderRadius: 8,
               fontSize: 13,
             }}
             formatter={(value) => `${value ?? ""}${suffix}`}
           />
-          <Bar dataKey="value" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={72} />
+          <Bar dataKey="value" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={72} />
         </BarChart>
       </ResponsiveContainer>
     </div>

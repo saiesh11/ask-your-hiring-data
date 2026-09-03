@@ -15,7 +15,7 @@
   justify-content: space-between;
   gap: 0.5rem 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
 }
 
 .title {
@@ -28,14 +28,14 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--dim);
 }
 
 .switcher select {
   font: inherit;
-  color: var(--fg);
-  background: var(--bg);
-  border: 1px solid var(--border);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0.2rem 0.4rem;
 }
@@ -52,7 +52,7 @@
 }
 
 .empty {
-  color: var(--muted);
+  color: var(--dim);
   font-size: 0.9rem;
 }
 
@@ -77,12 +77,12 @@
   max-width: 90%;
   padding: 0.6rem 0.8rem;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   font-size: 0.92rem;
 }
 
 .row.user .bubble {
-  background: var(--accent);
+  background: var(--brand);
   color: #fff;
   border-color: transparent;
 }
@@ -95,7 +95,7 @@
 .row.system .bubble {
   border: none;
   background: transparent;
-  color: var(--muted);
+  color: var(--dim);
   font-size: 0.8rem;
   padding: 0.2rem 0;
 }
@@ -106,7 +106,7 @@
 }
 
 .pending {
-  color: var(--muted);
+  color: var(--dim);
   font-size: 0.85rem;
 }
 
@@ -114,16 +114,16 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem 0 1rem;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
+  background: var(--paper);
+  border-top: 1px solid var(--line);
 }
 
 .form input {
   flex: 1;
   font: inherit;
-  color: var(--fg);
-  background: var(--bg);
-  border: 1px solid var(--border);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.55rem 0.7rem;
 }
@@ -131,7 +131,7 @@
 .form button {
   font: inherit;
   color: #fff;
-  background: var(--accent);
+  background: var(--brand);
   border: none;
   border-radius: 8px;
   padding: 0.55rem 1rem;

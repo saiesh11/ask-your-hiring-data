@@ -20,7 +20,7 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
     <div data-testid="answered">
       <p style={{ margin: "0 0 0.75rem", fontWeight: 500 }}>{response.summary}</p>
       <MetricChart chart={response.chart} />
-      <div style={{ marginTop: "0.5rem", fontSize: 13, color: "var(--muted)" }}>
+      <div style={{ marginTop: "0.5rem", fontSize: 13, color: "var(--dim)" }}>
         <span data-testid="grounded-line">
           Grounded in {citations.recordCount} record{citations.recordCount === 1 ? "" : "s"}
         </span>
@@ -34,7 +34,7 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
               style={{
                 background: "none",
                 border: "none",
-                color: "var(--accent)",
+                color: "var(--brand)",
                 cursor: "pointer",
                 padding: 0,
                 font: "inherit",
@@ -52,7 +52,7 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
             marginTop: "0.5rem",
             padding: "0.5rem",
             fontSize: 12,
-            background: "var(--border)",
+            background: "var(--line)",
             borderRadius: 6,
             wordBreak: "break-all",
           }}
@@ -72,8 +72,8 @@ function RefusalView({ response }: { response: RefusedResponse }) {
         style={{
           display: "inline-block",
           fontSize: 12,
-          color: "var(--muted)",
-          border: "1px solid var(--border)",
+          color: "var(--dim)",
+          border: "1px solid var(--line)",
           borderRadius: 999,
           padding: "0.1rem 0.55rem",
         }}

@@ -1,0 +1,8 @@
+// Connection URLs live in prisma.config.ts (Prisma 7). Models are added in S2.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
