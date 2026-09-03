@@ -16,6 +16,9 @@ const CredentialsSchema = z.object({
  * on the token and copied onto `session.user.id`.
  */
 export const authConfig: NextAuthConfig = {
+  // Trust the request Host header. Without it Auth.js throws UntrustedHost on
+  // any non-localhost origin — including hitting `pnpm dev` over the LAN IP.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
