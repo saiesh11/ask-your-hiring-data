@@ -60,25 +60,20 @@ describe("AnswerView", () => {
   });
 });
 
-vi.mock("next-auth/react", () => ({ signOut: vi.fn() }));
-
-const me = { name: "Casey", orgName: "Acme Inc", role: "CHRO", scopeLabel: "organization-wide" };
-
 describe("Chat", () => {
-  it("shows the viewer's org, role, and scope in the header", () => {
-    render(<Chat me={me} />);
-    expect(screen.getByText("Acme Inc")).toBeInTheDocument();
-    expect(screen.getByText(/Casey · CHRO · scoped to organization-wide/)).toBeInTheDocument();
+  it("shows suggestions in the empty state", () => {
+    render(<Chat />);
+    expect(screen.getByText("Show me headcount by band")).toBeInTheDocument();
   });
 
-  it("posts { question } (no userId) and renders the answer", async () => {
+  it("posts { question } and renders the answer", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn((_url: string | URL, _init?: RequestInit) =>
       Promise.resolve(new Response(JSON.stringify(answered), { status: 200 })),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<Chat me={me} />);
+    render(<Chat />);
     await user.type(screen.getByLabelText("Question"), "headcount in engineering");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 
@@ -100,7 +95,7 @@ describe("Chat", () => {
       ),
     );
 
-    render(<Chat me={me} />);
+    render(<Chat />);
     await user.type(screen.getByLabelText("Question"), "anything");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 

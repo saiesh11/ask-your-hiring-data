@@ -3,6 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const FIELDS = [
+  ["name", "Your name", "text"],
+  ["orgName", "Organization name", "text"],
+  ["email", "Work email", "email"],
+  ["password", "Password (min 8 characters)", "password"],
+] as const;
 
 export default function SignupPage() {
   const [form, setForm] = useState({ name: "", orgName: "", email: "", password: "" });
@@ -22,7 +33,6 @@ export default function SignupPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(form),
     });
-
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
       setPending(false);
@@ -44,56 +54,42 @@ export default function SignupPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: "4rem auto", padding: "0 1.25rem" }}>
-      <h1 style={{ fontSize: "1.3rem" }}>Create your workspace</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem", marginTop: "1.25rem" }}>
-        {(
-          [
-            ["name", "Your name", "text"],
-            ["orgName", "Organization name", "text"],
-            ["email", "Work email", "email"],
-            ["password", "Password (min 8 chars)", "password"],
-          ] as const
-        ).map(([key, label, type]) => (
-          <label key={key} style={{ display: "grid", gap: "0.25rem", fontSize: "0.85rem" }}>
-            {label}
-            <input
-              type={type}
-              required
-              minLength={type === "password" ? 8 : undefined}
-              value={form[key]}
-              onChange={set(key)}
-              style={inputStyle}
-            />
-          </label>
-        ))}
-        {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={pending} style={buttonStyle}>
-          {pending ? "Creating…" : "Create workspace"}
-        </button>
-      </form>
-      <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--dim)" }}>
-        Already have an account? <Link href="/login">Log in</Link>
-      </p>
+    <main className="mx-auto flex min-h-dvh max-w-sm items-center px-6 py-10">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Create your workspace</CardTitle>
+          <CardDescription>
+            We&apos;ll seed it with a synthetic hiring dataset to explore.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            {FIELDS.map(([key, label, type]) => (
+              <div key={key} className="grid gap-2">
+                <Label htmlFor={key}>{label}</Label>
+                <Input
+                  id={key}
+                  type={type}
+                  required
+                  minLength={type === "password" ? 8 : undefined}
+                  value={form[key]}
+                  onChange={set(key)}
+                />
+              </div>
+            ))}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={pending} className="w-full">
+              {pending ? "Creating…" : "Create workspace"}
+            </Button>
+          </form>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="text-foreground underline underline-offset-4">
+              Log in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  font: "inherit",
-  padding: "0.5rem 0.65rem",
-  border: "1px solid var(--line)",
-  borderRadius: 8,
-  background: "var(--paper)",
-  color: "var(--ink)",
-};
-
-const buttonStyle: React.CSSProperties = {
-  font: "inherit",
-  padding: "0.55rem 1rem",
-  border: "none",
-  borderRadius: 8,
-  background: "var(--brand)",
-  color: "#fff",
-  cursor: "pointer",
-};

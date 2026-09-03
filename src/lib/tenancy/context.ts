@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
 import type { Role } from "@/lib/db";
@@ -87,3 +88,6 @@ export async function requireContext(opts: { orgSlug?: string } = {}): Promise<R
     hiringData: new PrismaHiringDataSource(org.id),
   };
 }
+
+/** Request-deduped requireContext — a layout and its page share one lookup. */
+export const getRequestContext = cache((): Promise<RequestContext> => requireContext());

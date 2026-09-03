@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { signOut } from "next-auth/react";
 import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AnswerView } from "./answer-view";
-import styles from "./chat.module.css";
-
-export interface ChatViewer {
-  name: string;
-  orgName: string;
-  role: string;
-  scopeLabel: string;
-}
 
 type Turn =
   | { role: "user"; text: string }
@@ -35,7 +28,7 @@ function isAskResponse(value: unknown): value is AnsweredResponse | RefusedRespo
   );
 }
 
-export function Chat({ me }: { me: ChatViewer }) {
+export function Chat() {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState(false);
@@ -85,31 +78,19 @@ export function Chat({ me }: { me: ChatViewer }) {
   }
 
   return (
-    <div className={styles.shell}>
-      <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>{me.orgName}</h1>
-          <p className={styles.subtitle}>
-            {me.name} · {me.role} · scoped to {me.scopeLabel}
-          </p>
-        </div>
-        <button
-          type="button"
-          className={styles.signout}
-          onClick={() => void signOut({ redirectTo: "/" })}
-        >
-          Sign out
-        </button>
-      </header>
-
-      <div className={styles.transcript} ref={transcriptRef}>
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
+      <div ref={transcriptRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto py-6">
         {turns.length === 0 && (
-          <div className={styles.empty}>
+          <div className="text-sm text-muted-foreground">
             <p>Ask a plain-English question about your hiring data.</p>
-            <ul>
+            <ul className="mt-2 space-y-1">
               {SUGGESTIONS.map((s) => (
                 <li key={s}>
-                  <button type="button" className={styles.suggestion} onClick={() => ask(s)}>
+                  <button
+                    type="button"
+                    className="text-left text-primary hover:underline"
+                    onClick={() => ask(s)}
+                  >
                     {s}
                   </button>
                 </li>
@@ -119,32 +100,42 @@ export function Chat({ me }: { me: ChatViewer }) {
         )}
 
         {turns.map((turn, i) => (
-          <div key={i} className={`${styles.row} ${styles[turn.role]}`}>
-            <div className={styles.bubble}>
-              {turn.role === "assistant" ? <AnswerView response={turn.response} /> : turn.text}
-            </div>
+          <div key={i} className={turn.role === "user" ? "flex justify-end" : "flex"}>
+            {turn.role === "user" ? (
+              <div className="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+                {turn.text}
+              </div>
+            ) : turn.role === "error" ? (
+              <div className="rounded-lg border border-destructive/50 px-3 py-2 text-sm text-destructive">
+                {turn.text}
+              </div>
+            ) : (
+              <div className="w-full rounded-lg border p-3">
+                <AnswerView response={turn.response} />
+              </div>
+            )}
           </div>
         ))}
 
-        {pending && <div className={styles.pending}>Thinking…</div>}
+        {pending && <div className="text-sm text-muted-foreground">Thinking…</div>}
       </div>
 
       <form
-        className={styles.form}
+        className="flex gap-2 border-t bg-background py-3"
         onSubmit={(e) => {
           e.preventDefault();
           void ask(input);
         }}
       >
-        <input
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="e.g. How many senior hires did we make in Q2 2024?"
           aria-label="Question"
         />
-        <button type="submit" disabled={pending || input.trim().length === 0}>
+        <Button type="submit" disabled={pending || input.trim().length === 0}>
           Ask
-        </button>
+        </Button>
       </form>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function AcceptInviteButton({ token }: { token: string }) {
   const [pending, setPending] = useState(false);
@@ -24,24 +25,11 @@ export function AcceptInviteButton({ token }: { token: string }) {
   }
 
   return (
-    <div style={{ marginTop: "1.25rem" }}>
-      <button
-        type="button"
-        onClick={accept}
-        disabled={pending}
-        style={{
-          font: "inherit",
-          padding: "0.55rem 1.1rem",
-          border: "none",
-          borderRadius: 8,
-          background: "var(--brand)",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
+    <div className="mt-5">
+      <Button onClick={accept} disabled={pending}>
         {pending ? "Joining…" : "Accept invitation"}
-      </button>
-      {error && <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>}
+      </Button>
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>
   );
 }

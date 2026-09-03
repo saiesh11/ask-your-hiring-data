@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,56 +29,47 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 380, margin: "5rem auto", padding: "0 1.25rem" }}>
-      <h1 style={{ fontSize: "1.3rem" }}>Log in</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem", marginTop: "1.25rem" }}>
-        <label style={{ display: "grid", gap: "0.25rem", fontSize: "0.85rem" }}>
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-          />
-        </label>
-        <label style={{ display: "grid", gap: "0.25rem", fontSize: "0.85rem" }}>
-          Password
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
-          />
-        </label>
-        {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={pending} style={buttonStyle}>
-          {pending ? "Logging in…" : "Log in"}
-        </button>
-      </form>
-      <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--dim)" }}>
-        No account? <Link href="/signup">Sign up</Link>
-      </p>
+    <main className="mx-auto flex min-h-dvh max-w-sm items-center px-6">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Log in</CardTitle>
+          <CardDescription>Welcome back to Ask Your Hiring Data.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={pending} className="w-full">
+              {pending ? "Logging in…" : "Log in"}
+            </Button>
+          </form>
+          <p className="mt-4 text-sm text-muted-foreground">
+            No account?{" "}
+            <Link href="/signup" className="text-foreground underline underline-offset-4">
+              Sign up
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  font: "inherit",
-  padding: "0.5rem 0.65rem",
-  border: "1px solid var(--line)",
-  borderRadius: 8,
-  background: "var(--paper)",
-  color: "var(--ink)",
-};
-
-const buttonStyle: React.CSSProperties = {
-  font: "inherit",
-  padding: "0.55rem 1rem",
-  border: "none",
-  borderRadius: 8,
-  background: "var(--brand)",
-  color: "#fff",
-  cursor: "pointer",
-};
