@@ -1,0 +1,871 @@
+<title>Hiring Data UI Showroom</title>
+<meta name="description" content="Every redesign option for Ask Your Hiring Data, rendered side by side — accent hues, light vs dark, KPI cards, type, icons, ten analytical views, and home/login/shell mocks." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" />
+
+<style>
+  :root {
+    --paper:#FCFCFB; --surface:#FFFFFF; --surface-2:#F4F4F2; --inset:#EBEBE8;
+    --ink:#17181B; --muted:#5F636A; --faint:#8A8E96;
+    --line:#E4E3DE; --line-strong:#D2D1CB;
+    --accent:#3B4CE0; --accent-ink:#2C3AC0;
+    --pick:#2E7D53; --pick-soft:#E7F3EC;
+    --flag:#A45B1F;
+    --radius:12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0F1013; --surface:#16171B; --surface-2:#1B1C21; --inset:#24262C;
+      --ink:#EAEAE8; --muted:#9BA0A7; --faint:#767B82;
+      --line:#292B31; --line-strong:#393B42;
+      --accent:#8592FF; --accent-ink:#A7B0FF;
+      --pick:#5CBE87; --pick-soft:#14271E;
+      --flag:#D68F4E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1013; --surface:#16171B; --surface-2:#1B1C21; --inset:#24262C;
+    --ink:#EAEAE8; --muted:#9BA0A7; --faint:#767B82;
+    --line:#292B31; --line-strong:#393B42;
+    --accent:#8592FF; --accent-ink:#A7B0FF;
+    --pick:#5CBE87; --pick-soft:#14271E;
+    --flag:#D68F4E;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:15px; line-height:1.6; font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 24px 120px; }
+
+  /* masthead */
+  .mast { padding:56px 0 32px; border-bottom:1px solid var(--line-strong); }
+  .kicker { font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .kicker .dot { width:5px; height:5px; border-radius:50%; background:var(--accent); }
+  h1 { font-weight:700; letter-spacing:-.035em; line-height:1.03; font-size:clamp(34px,5.4vw,54px); margin:16px 0 0; max-width:18ch; text-wrap:balance; }
+  .lede { margin:18px 0 0; max-width:66ch; color:var(--muted); font-size:16px; }
+  .lede strong { color:var(--ink); font-weight:600; }
+  .legend { display:flex; gap:20px; flex-wrap:wrap; margin-top:22px; font-family:"IBM Plex Mono", monospace; font-size:11.5px; color:var(--muted); }
+  .legend .rec-tag { position:static; }
+
+  /* bay frame */
+  .bay { padding-top:56px; }
+  .bay-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .slug { font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600; letter-spacing:.14em; color:var(--accent-ink); padding:4px 9px; border:1px solid var(--line-strong); border-radius:6px; background:var(--surface-2); }
+  .bay h2 { font-weight:600; letter-spacing:-.02em; font-size:24px; margin:0; }
+  .bay .q { flex-basis:100%; color:var(--muted); max-width:74ch; margin:10px 0 0; }
+  .bay .q code { font-family:"IBM Plex Mono", monospace; font-size:.86em; background:var(--inset); padding:1px 5px; border-radius:4px; color:var(--ink); }
+
+  .stage { margin-top:18px; border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--surface-2); padding:22px; overflow-x:auto; }
+  .row { display:grid; gap:18px; }
+  .row.c2 { grid-template-columns:repeat(2,minmax(240px,1fr)); }
+  .row.c3 { grid-template-columns:repeat(3,minmax(220px,1fr)); }
+  .row.c4 { grid-template-columns:repeat(4,minmax(190px,1fr)); }
+  @media (max-width:900px){ .row.c3, .row.c4 { grid-template-columns:repeat(2,minmax(200px,1fr)); } }
+  @media (max-width:560px){ .row.c2, .row.c3, .row.c4 { grid-template-columns:1fr; } }
+
+  .cell { display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .cap { border-top:1px solid var(--line-strong); padding-top:9px; }
+  .cap .name { font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .cap .why { color:var(--muted); font-size:12px; margin-top:2px; }
+  .rec-tag { font-family:"IBM Plex Mono", monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--pick); border:1px solid color-mix(in oklab, var(--pick) 45%, transparent); background:var(--pick-soft); padding:1px 6px; border-radius:20px; font-weight:600; }
+  .alt-tag { font-family:"IBM Plex Mono", monospace; font-size:10px; letter-spacing:.06em; color:var(--faint); }
+
+  /* ---- app fragment (accent + mode bays) ---- */
+  .frag { border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:14px; font-family:"IBM Plex Sans", sans-serif; border:1px solid var(--fl, rgba(0,0,0,.06)); }
+  .frag--dark { background:#131418; color:#EAEAE8; --fc:#1B1C21; --fl:#2A2C31; --fm:#9BA0A7; }
+  .frag--light { background:#FFFFFF; color:#17181B; --fc:#F6F6F4; --fl:#E4E3DE; --fm:#5F636A; }
+  .f-nav { display:flex; gap:2px; font-size:12px; }
+  .f-nav span { padding:6px 10px; border-radius:7px; color:var(--fm); }
+  .f-nav span.on { color:#fff; background:var(--a); }
+  .f-kpi { background:var(--fc); border:1px solid var(--fl); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:6px; }
+  .f-kpi .l { font-family:"IBM Plex Mono", monospace; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--fm); }
+  .f-kpi .v { font-size:24px; font-weight:600; letter-spacing:-.02em; font-family:"IBM Plex Mono", monospace; }
+  .f-kpi .v small { font-size:12px; color:var(--fm); font-weight:400; margin-left:3px; }
+  .f-kpi .d { font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--a); }
+  .f-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .f-btn { background:var(--a); color:#fff; border:none; border-radius:8px; padding:8px 16px; font:600 12px "IBM Plex Sans", sans-serif; }
+  .f-chips { display:flex; gap:4px; }
+  .f-chips i { width:8px; height:8px; border-radius:2px; background:var(--a); display:block; }
+  .f-chips i:nth-child(2){ opacity:.6 } .f-chips i:nth-child(3){ opacity:.35 }
+
+  /* ---- KPI bay ---- */
+  .kcard { border:1px solid var(--line-strong); border-radius:12px; padding:18px; background:var(--surface); display:flex; flex-direction:column; gap:10px; min-height:150px; }
+  .kcard .kl { font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); display:flex; justify-content:space-between; }
+  .kcard .kv { font-family:"IBM Plex Mono", monospace; font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1; }
+  .kcard .kv small { font:400 13px "IBM Plex Sans", sans-serif; color:var(--muted); margin-left:4px; }
+  .kd { font-family:"IBM Plex Mono", monospace; font-size:12px; display:inline-flex; gap:5px; }
+  .kd.bad { color:var(--flag); } .kd.good { color:var(--pick); } .kd.flat { color:var(--muted); }
+  .kx { font-size:11px; color:var(--muted); margin-top:auto; }
+
+  /* ---- type bay ---- */
+  .tspec { border:1px solid var(--line-strong); border-radius:12px; padding:18px; background:var(--surface); }
+  .tspec h4 { margin:0; font-size:16px; font-weight:600; letter-spacing:-.01em; }
+  .tspec p { margin:8px 0 0; font-size:13.5px; color:var(--muted); }
+  .tspec .big { font-size:32px; font-weight:600; letter-spacing:-.02em; margin-top:10px; font-variant-numeric:tabular-nums; }
+  .tspec.geist { font-family:"Geist", ui-sans-serif, system-ui, sans-serif; }
+  .tspec.geist .big { font-family:"Geist Mono","Geist", ui-monospace, monospace; }
+  .tspec.inter { font-family:"Inter", ui-sans-serif, system-ui, sans-serif; }
+  .tspec.plex { font-family:"IBM Plex Sans", sans-serif; }
+  .tspec.plex .big { font-family:"IBM Plex Mono", monospace; }
+  .numcmp { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px; }
+  @media (max-width:560px){ .numcmp { grid-template-columns:1fr; } }
+  .numcmp table { width:100%; border-collapse:collapse; font-family:"IBM Plex Mono", monospace; font-size:13px; }
+  .numcmp td { padding:5px 8px; border-bottom:1px solid var(--line); }
+  .numcmp td:last-child { text-align:right; }
+  .numcmp .prop td:last-child { font-variant-numeric:normal; }
+  .numcmp .tab td:last-child { font-variant-numeric:tabular-nums; }
+  .numcmp caption { font-family:"IBM Plex Mono", monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); text-align:left; padding-bottom:6px; }
+
+  /* ---- icon bay ---- */
+  .tbar { display:flex; gap:6px; padding:10px 12px; border:1px solid var(--line-strong); border-radius:10px; background:var(--surface); align-items:center; }
+  .tbar svg { display:block; }
+  .tbar .btn { width:32px; height:32px; display:grid; place-items:center; border-radius:7px; color:var(--muted); }
+  .tbar .btn.on { background:var(--accent); color:#fff; }
+
+  /* ---- models bay ---- */
+  .models { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  @media (max-width:820px){ .models { grid-template-columns:1fr; } }
+  .mcard { border:1px solid var(--line-strong); border-radius:12px; background:var(--surface); padding:16px 16px 12px; }
+  .mcard .mt { font-weight:600; font-size:14px; letter-spacing:-.01em; }
+  .mard .ms, .mard { } /* noop */
+  .mard { }
+  .mcard-desc, .mard { }
+  .mard { }
+  .msub { font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--muted); margin-top:3px; }
+  .msub b { color:var(--accent-ink); font-weight:600; }
+  .mcanvas { margin-top:12px; }
+  .mcanvas svg { display:block; width:100%; height:auto; overflow:visible; }
+  .ax { font-family:"IBM Plex Mono", monospace; font-size:9px; fill:var(--faint); }
+  .axv { font-family:"IBM Plex Mono", monospace; font-size:9px; fill:var(--muted); }
+  .grid { stroke:var(--line); stroke-width:1; }
+  .bar { fill:var(--accent); }
+  .bar-soft { fill:var(--accent); opacity:.4; }
+  .ser { fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .dot { fill:var(--accent); }
+  .thr-ok { fill:var(--pick); } .thr-bad { fill:var(--flag); }
+
+  /* ---- mock browser (home/login/shell) ---- */
+  .mock { border:1px solid var(--line-strong); border-radius:12px; overflow:hidden; background:var(--surface); }
+  .mock .chrome { display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--surface-2); border-bottom:1px solid var(--line); }
+  .mock .chrome i { width:9px; height:9px; border-radius:50%; background:var(--line-strong); display:block; }
+  .mock .chrome span { font-family:"IBM Plex Mono", monospace; font-size:10px; color:var(--faint); margin-left:8px; }
+  .mock .view { padding:18px; display:flex; flex-direction:column; gap:12px; }
+  .m-h1 { font-size:20px; font-weight:600; letter-spacing:-.02em; text-wrap:balance; }
+  .m-sub { font-size:12.5px; color:var(--muted); max-width:44ch; }
+  .m-cta { align-self:flex-start; background:var(--accent); color:#fff; font:600 12px "IBM Plex Sans", sans-serif; padding:8px 16px; border-radius:8px; }
+  .m-ghost { align-self:flex-start; border:1px solid var(--line-strong); color:var(--ink); font:500 12px "IBM Plex Sans", sans-serif; padding:8px 14px; border-radius:8px; background:var(--surface); }
+  .m-panel { border:1px solid var(--line); border-radius:10px; background:var(--surface-2); padding:14px; font-size:12px; color:var(--muted); }
+  .m-shot { border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .m-shot .l { font-family:"IBM Plex Mono", monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .m-shot .a { font-size:15px; font-weight:600; font-family:"IBM Plex Mono", monospace; }
+  .m-bento { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media (max-width:640px){ .m-bento { grid-template-columns:repeat(2,1fr); } }
+  .m-bento div { border:1px solid var(--line); border-radius:8px; padding:10px; font-size:11px; color:var(--muted); background:var(--surface-2); }
+  .m-bento b { display:block; color:var(--ink); font-size:11.5px; margin-bottom:2px; }
+  .m-split { display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:560px){ .m-split { grid-template-columns:1fr; } }
+  .m-form { padding:20px; display:flex; flex-direction:column; gap:9px; border-right:1px solid var(--line); }
+  .m-form .fld { border:1px solid var(--line-strong); border-radius:7px; padding:8px 10px; font-size:11px; color:var(--faint); background:var(--surface); }
+  .m-form .fld.filled { color:var(--ink); }
+  .m-aside { padding:20px; background:var(--surface-2); display:flex; flex-direction:column; gap:10px; font-size:12px; color:var(--muted); }
+  .m-aside .rolechips { display:flex; gap:4px; flex-wrap:wrap; }
+  .m-aside .rolechips span { font-family:"IBM Plex Mono", monospace; font-size:9.5px; border:1px solid var(--line-strong); border-radius:20px; padding:2px 7px; color:var(--ink); }
+  .m-term { background:#0d0e12; color:#d6d7da; border-radius:10px; padding:14px; font-family:"IBM Plex Mono", monospace; font-size:11px; line-height:1.7; }
+  .m-term .p { color:#6b83ff; } .m-term .o { color:#8a8e96; }
+
+  .m-shell { display:grid; grid-template-columns:150px 1fr; min-height:280px; }
+  .m-side { background:var(--surface-2); border-right:1px solid var(--line); padding:12px; display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--muted); }
+  .m-side .item { padding:5px 7px; border-radius:6px; }
+  .m-side .item.on { background:var(--accent); color:#fff; }
+  .m-main { display:flex; flex-direction:column; }
+  .m-top { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--line); font-family:"IBM Plex Mono", monospace; font-size:10px; color:var(--muted); }
+  .m-top .badge { margin-left:auto; border:1px solid var(--line-strong); border-radius:20px; padding:1px 7px; }
+  .m-tabs { display:flex; gap:14px; padding:8px 14px; border-bottom:1px solid var(--line); font-size:12px; }
+  .m-tabs span { color:var(--muted); padding-bottom:6px; }
+  .m-tabs span.on { color:var(--ink); font-weight:600; box-shadow:inset 0 -2px var(--accent); }
+  .m-body { padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .m-krow { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media (max-width:640px){ .m-krow { grid-template-columns:repeat(2,1fr); } }
+  .m-krow div { border:1px solid var(--line); border-radius:8px; padding:8px; background:var(--surface-2); }
+  .m-krow .kl { font-family:"IBM Plex Mono", monospace; font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .m-krow .kv { font-family:"IBM Plex Mono", monospace; font-size:15px; font-weight:600; margin-top:3px; }
+  .m-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  @media (max-width:560px){ .m-2 { grid-template-columns:1fr; } }
+  .m-2 .box { border:1px solid var(--line); border-radius:8px; padding:10px; background:var(--surface-2); }
+
+  .note { font-size:12px; color:var(--muted); margin-top:12px; }
+  .note b { color:var(--ink); }
+  hr.r { border:none; border-top:1px solid var(--line); margin:56px 0 0; }
+  .foot { margin-top:60px; padding-top:22px; border-top:1px solid var(--line-strong); font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--faint); }
+  .foot b { color:var(--muted); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ * { transition:none!important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker"><span class="dot"></span> Companion to the Redesign Dossier &nbsp;·&nbsp; rendered options</div>
+    <h1>Hiring Data UI Showroom</h1>
+    <p class="lede">The same ten decisions from the dossier, but <strong>drawn instead of described</strong> — accent hues on a
+      real app fragment, light against dark, the three KPI densities, the type choices set in actual answer cards, and all
+      <strong>ten analytical views rendered with real hiring numbers</strong>. Everything below is a static mock built from your
+      data model; pick what you can see working.</p>
+    <div class="legend">
+      <span><span class="rec-tag">rec</span> &nbsp;= my recommendation</span>
+      <span>reply keyed like &nbsp;<b style="color:var(--ink)">ACCENT: indigo · MODE: dark · KPI: B</b></span>
+    </div>
+  </header>
+
+  <!-- ACCENT -->
+  <section class="bay" id="accent">
+    <div class="bay-head">
+      <span class="slug">ACCENT</span><h2>One accent hue, on a real app fragment</h2>
+      <p class="q">Same fragment — active nav item, a KPI card with sparkline, a mini bar chart, the primary button — tinted four ways.
+        Everything not tinted stays greyscale, so the accent only ever marks <em>action</em> and <em>current value</em>.</p>
+    </div>
+    <div class="stage">
+      <div class="row c4">
+        <div class="cell">
+          <div class="frag frag--dark" style="--a:#3B4CE0">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Time to fill</span><span class="v">61.9<small>days</small></span><span class="d">▲ 4.2 · 7.3%</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,20 28,18 54,21 80,13 106,16 132,10 158,13 184,5 198,7" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="7" r="2.5" fill="var(--a)"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Indigo <span class="rec-tag">rec</span></div><div class="why"><code style="font-family:'IBM Plex Mono',monospace">#3B4CE0</code> — distinct without the "AI purple gradient" read; holds on both grounds.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="frag frag--dark" style="--a:#2563EB">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Time to fill</span><span class="v">61.9<small>days</small></span><span class="d">▲ 4.2 · 7.3%</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,20 28,18 54,21 80,13 106,16 132,10 158,13 184,5 198,7" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="7" r="2.5" fill="var(--a)"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Blue <span class="alt-tag">alt</span></div><div class="why"><code style="font-family:'IBM Plex Mono',monospace">#2563EB</code> — safest, most "SaaS default". A touch generic.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="frag frag--dark" style="--a:#7C3AED">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Time to fill</span><span class="v">61.9<small>days</small></span><span class="d">▲ 4.2 · 7.3%</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,20 28,18 54,21 80,13 106,16 132,10 158,13 184,5 198,7" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="7" r="2.5" fill="var(--a)"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Violet <span class="alt-tag">alt</span></div><div class="why"><code style="font-family:'IBM Plex Mono',monospace">#7C3AED</code> — more character; edges toward the common AI look.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="frag frag--dark" style="--a:#0D9488">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Time to fill</span><span class="v">61.9<small>days</small></span><span class="d">▲ 4.2 · 7.3%</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,20 28,18 54,21 80,13 106,16 132,10 158,13 184,5 198,7" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="7" r="2.5" fill="var(--a)"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Teal <span class="alt-tag">alt</span></div><div class="why"><code style="font-family:'IBM Plex Mono',monospace">#0D9488</code> — calm, data-friendly; clashes with the amber "bad delta" less than blue.</div></div>
+        </div>
+      </div>
+      <p class="note"><b>Watch for:</b> the accent must not collide with the semantic amber (rising time-to-fill = bad) or green
+        (good). Indigo and teal keep the most distance; blue is closest to a "neutral info" blue used elsewhere.</p>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- MODE -->
+  <section class="bay" id="mode">
+    <div class="bay-head">
+      <span class="slug">MODE</span><h2>Dark-first or light-first</h2>
+      <p class="q">The same fragment (indigo) on each ground. Both ship regardless — this is only about which one the app
+        <em>opens</em> in and which one gets the first polish pass.</p>
+    </div>
+    <div class="stage">
+      <div class="row c2">
+        <div class="cell">
+          <div class="frag frag--dark" style="--a:#3B4CE0">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Open requisitions</span><span class="v">18</span><span class="d">▬ no change</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,14 28,13 54,15 80,14 106,16 132,13 158,14 184,15 198,14" fill="none" stroke="#9BA0A7" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Dark <span class="rec-tag">rec</span></div><div class="why">Heads-down analytics use; less chart glare in long sessions. Matches the dev-tool identity.</div></div>
+        </div>
+        <div class="cell">
+          <div class="frag frag--light" style="--a:#3B4CE0">
+            <div class="f-nav"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="f-kpi"><span class="l">Open requisitions</span><span class="v">18</span><span class="d">▬ no change</span>
+              <svg viewBox="0 0 200 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="2,14 28,13 54,15 80,14 106,16 132,13 158,14 184,15 198,14" fill="none" stroke="#8A8E96" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="f-foot">
+              <svg class="f-bars" viewBox="0 0 90 40" width="90" height="40" aria-hidden="true"><rect x="4" y="14" width="16" height="26" fill="var(--a)"/><rect x="26" y="6" width="16" height="34" fill="var(--a)" opacity=".75"/><rect x="48" y="20" width="16" height="20" fill="var(--a)" opacity=".55"/><rect x="70" y="24" width="16" height="16" fill="var(--a)" opacity=".4"/></svg>
+              <button class="f-btn">Ask</button>
+            </div>
+          </div>
+          <div class="cap"><div class="name">Light <span class="alt-tag">alt</span></div><div class="why">Friendlier on the marketing home; better for exec screenshots pasted into decks.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- KPI -->
+  <section class="bay" id="kpi">
+    <div class="bay-head">
+      <span class="slug">KPI</span><h2>Stat-card density</h2>
+      <p class="q">Real figures from your dataset. Row 1 is the three densities. Row 2 shows the <em>semantic-color rule</em> —
+        arrow direction and colour are set independently, because "up" isn't always "good".</p>
+    </div>
+    <div class="stage">
+      <div class="row c3">
+        <div class="cell">
+          <div class="kcard">
+            <div class="kl"><span>Time to fill</span><span style="color:var(--accent-ink)">A</span></div>
+            <div class="kv">61.9<small>days</small></div>
+            <div><span class="kd bad">▲ 4.2 vs last quarter</span></div>
+          </div>
+          <div class="cap"><div class="name">A · minimal</div><div class="why">Label, value, one delta. For inline-in-a-chat-answer, or tight grids.</div></div>
+        </div>
+        <div class="cell">
+          <div class="kcard">
+            <div class="kl"><span>Time to fill</span><span style="color:var(--accent-ink)">B</span></div>
+            <div class="kv">61.9<small>days</small></div>
+            <div><span class="kd bad">▲ 4.2 · 7.3%</span></div>
+            <svg viewBox="0 0 260 30" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="3,24 32,22 61,25 90,17 119,20 148,13 177,16 206,8 235,11 257,9" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><circle cx="257" cy="9" r="3" fill="var(--accent)"/></svg>
+          </div>
+          <div class="cap"><div class="name">B · + sparkline <span class="rec-tag">rec</span></div><div class="why">Adds shape-of-trend without an axis. The default everywhere.</div></div>
+        </div>
+        <div class="cell">
+          <div class="kcard">
+            <div class="kl"><span>Time to fill</span><span style="color:var(--accent-ink)">C</span></div>
+            <div class="kv">61.9<small>days</small></div>
+            <div><span class="kd bad">▲ 4.2 · 7.3%</span></div>
+            <svg viewBox="0 0 260 26" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="3,20 32,18 61,21 90,14 119,17 148,10 177,13 206,6 235,9 257,7" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><circle cx="257" cy="7" r="3" fill="var(--accent)"/></svg>
+            <div class="kx">median 54 · target 45 · grounded in 47 filled reqs</div>
+          </div>
+          <div class="cap"><div class="name">C · full context</div><div class="why">For the top row of the Dashboard tab, where one glance should answer "and is that OK?"</div></div>
+        </div>
+      </div>
+
+      <div class="row c3" style="margin-top:18px">
+        <div class="cell"><div class="kcard">
+          <div class="kl"><span>Time to fill</span></div><div class="kv">61.9<small>days</small></div>
+          <div><span class="kd bad">▲ 4.2 · slower</span></div>
+          <div class="kx">up &amp; <b style="color:var(--flag)">amber</b> — hiring got slower</div>
+        </div></div>
+        <div class="cell"><div class="kcard">
+          <div class="kl"><span>Offer accept rate</span></div><div class="kv">82<small>%</small></div>
+          <div><span class="kd bad">▼ 3 pts · fewer accepts</span></div>
+          <div class="kx">down &amp; <b style="color:var(--flag)">amber</b> — losing more offers</div>
+        </div></div>
+        <div class="cell"><div class="kcard">
+          <div class="kl"><span>Hires this quarter</span></div><div class="kv">26</div>
+          <div><span class="kd good">▲ 8 · ahead of plan</span></div>
+          <div class="kx">up &amp; <b style="color:var(--pick)">green</b> — more hires landed</div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- TYPE -->
+  <section class="bay" id="type">
+    <div class="bay-head">
+      <span class="slug">TYPE</span><h2>Typeface, in an actual answer card</h2>
+      <p class="q">Identical content, three type systems. The metric line is the tell — set it in a tabular/mono face and a
+        column of them lines up; leave it proportional and it doesn't.</p>
+    </div>
+    <div class="stage">
+      <div class="row c3">
+        <div class="cell">
+          <div class="tspec geist">
+            <h4>Headcount — Engineering</h4>
+            <p>Grounded in 2 records. Fields: <code style="font-family:inherit">active</code>, <code style="font-family:inherit">jobFamilyId</code>.</p>
+            <div class="big">43</div>
+          </div>
+          <div class="cap"><div class="name">Geist Sans + Geist Mono <span class="rec-tag">rec</span></div><div class="why">Keeps the Vercel-adjacent identity you already have; mono for metrics signals "data".</div></div>
+        </div>
+        <div class="cell">
+          <div class="tspec inter">
+            <h4>Headcount — Engineering</h4>
+            <p>Grounded in 2 records. Fields: <code style="font-family:inherit">active</code>, <code style="font-family:inherit">jobFamilyId</code>.</p>
+            <div class="big" style="font-variant-numeric:tabular-nums">43</div>
+          </div>
+          <div class="cap"><div class="name">Inter (tabular figures) <span class="alt-tag">alt</span></div><div class="why">The dashboard workhorse. One face does prose + aligned digits. Reads a bit generic.</div></div>
+        </div>
+        <div class="cell">
+          <div class="tspec plex">
+            <h4>Headcount — Engineering</h4>
+            <p>Grounded in 2 records. Fields: <code style="font-family:inherit">active</code>, <code style="font-family:inherit">jobFamilyId</code>.</p>
+            <div class="big">43</div>
+          </div>
+          <div class="cap"><div class="name">IBM Plex Sans + Mono <span class="alt-tag">alt</span></div><div class="why">More institutional character (this doc's face). A bigger personality than the product needs.</div></div>
+        </div>
+      </div>
+
+      <div class="numcmp">
+        <table class="prop">
+          <caption>Proportional digits — today</caption>
+          <tr><td>Engineering</td><td>1,184</td></tr>
+          <tr><td>Sales</td><td>612</td></tr>
+          <tr><td>Product</td><td>391</td></tr>
+          <tr><td>Design</td><td>77</td></tr>
+        </table>
+        <table class="tab">
+          <caption>Tabular / mono — proposed</caption>
+          <tr><td>Engineering</td><td>1,184</td></tr>
+          <tr><td>Sales</td><td>612</td></tr>
+          <tr><td>Product</td><td>391</td></tr>
+          <tr><td>Design</td><td>77</td></tr>
+        </table>
+      </div>
+      <p class="note">Right-hand column: every digit occupies one width, so the ones/tens/hundreds stack. Left: they drift.
+        <b>Geist may render as a system sans in this preview</b> if the font host doesn't serve it — in-app it loads via <code style="font-family:'IBM Plex Mono',monospace">next/font</code>.</p>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- ICONS -->
+  <section class="bay" id="icons">
+    <div class="bay-head">
+      <span class="slug">ICONS</span><h2>Icon character</h2>
+      <p class="q">One toolbar — search, filter, date range, export, chart, members, settings — in each style's stroke language.
+        Shapes here are representative at a 24px grid; the real decision is weight range and ecosystem fit.</p>
+    </div>
+    <div class="stage">
+      <div class="row c3">
+        <div class="cell">
+          <div class="tbar">
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+            <span class="btn on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.6 15a1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h0A1.65 1.65 0 0 0 9 2.09V2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 8h0a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          </div>
+          <div class="cap"><div class="name">Lucide — one weight, 1.5–2px <span class="rec-tag">rec</span></div><div class="why">Already wired; every shadcn block ships with it. Add ~10 Tabler glyphs only for funnel / cohort / pivot.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="tbar">
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.5" y="4.5" width="17" height="17" rx="2.5"/><line x1="16" y1="2.5" x2="16" y2="6"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5"/><polyline points="7 11 12 16 17 11"/><line x1="12" y1="16" x2="12" y2="3"/></svg></span>
+            <span class="btn on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0z"/><circle cx="17" cy="9" r="2.6" opacity=".55"/><path d="M15 20a4.6 4.6 0 0 1 6.5-4.2A5.5 5.5 0 0 1 22 20z" opacity=".55"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 4a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 2h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 3 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 22h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg></span>
+          </div>
+          <div class="cap"><div class="name">Phosphor — six weights (thin→fill→duotone)</div><div class="why">Expressive; duotone reads well on a marketing home. Means re-iconing every shadcn component.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="tbar">
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="21" y1="21" x2="15.5" y2="15.5"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v2.5l-6 6V19l-4 2v-8.5l-6-6z"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5 5-5"/><line x1="12" y1="4" x2="12" y2="16"/></svg></span>
+            <span class="btn on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><rect x="5" y="12" width="3.5" height="5"/><rect x="10.5" y="7" width="3.5" height="10"/><rect x="16" y="10" width="3.5" height="7"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M4 21v-1a5 5 0 0 1 10 0v1"/><path d="M17 11a3 3 0 0 0 0-6"/><path d="M20 21v-1a5 5 0 0 0-3-4.6"/></svg></span>
+            <span class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.2a1.9 1.9 0 0 1 3.4 0l.6 1.2a1.9 1.9 0 0 0 2.3 1l1.3-.4a1.9 1.9 0 0 1 2.4 2.4l-.4 1.3a1.9 1.9 0 0 0 1 2.3l1.2.6a1.9 1.9 0 0 1 0 3.4l-1.2.6a1.9 1.9 0 0 0-1 2.3l.4 1.3a1.9 1.9 0 0 1-2.4 2.4l-1.3-.4a1.9 1.9 0 0 0-2.3 1l-.6 1.2a1.9 1.9 0 0 1-3.4 0l-.6-1.2a1.9 1.9 0 0 0-2.3-1l-1.3.4a1.9 1.9 0 0 1-2.4-2.4l.4-1.3a1.9 1.9 0 0 0-1-2.3l-1.2-.6a1.9 1.9 0 0 1 0-3.4l1.2-.6a1.9 1.9 0 0 0 1-2.3l-.4-1.3a1.9 1.9 0 0 1 2.4-2.4l1.3.4a1.9 1.9 0 0 0 2.3-1z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </div>
+          <div class="cap"><div class="name">Tabler — 2px stroke, 6,000+ icons</div><div class="why">Best coverage for niche data glyphs; stroke sits close to Lucide. Good as a supplement, not a base.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- MODELS -->
+  <section class="bay" id="models">
+    <div class="bay-head">
+      <span class="slug">MODELS</span><h2>Ten analytical views — rendered with real numbers</h2>
+      <p class="q">Each answers a question your executor can produce. The chat reply picks one from its <code>chart</code>
+        payload; the Dashboard and Explore tabs compose them. Values are a plausible org of ~1,184 people.</p>
+    </div>
+    <div class="stage">
+      <div class="models">
+
+        <!-- 1 headcount by band -->
+        <div class="mcard mard">
+          <div class="mt">1 · Headcount by band</div>
+          <div class="msub"><b>horizontal bars</b> · Recharts BarChart · "show me headcount by band"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Headcount by band: L3 210, L4 340, L5 295, L6 180, L7 95, L8 40">
+            <g class="axv">
+              <text x="34" y="18" text-anchor="end">L3</text><text x="34" y="42" text-anchor="end">L4</text><text x="34" y="66" text-anchor="end">L5</text>
+              <text x="34" y="90" text-anchor="end">L6</text><text x="34" y="114" text-anchor="end">L7</text><text x="34" y="138" text-anchor="end">L8</text>
+            </g>
+            <line class="grid" x1="42" y1="150" x2="352" y2="150"/>
+            <rect class="bar" x="42" y="6"  width="176" height="16"/><text class="axv" x="224" y="18">210</text>
+            <rect class="bar" x="42" y="30" width="285" height="16"/><text class="axv" x="333" y="42">340</text>
+            <rect class="bar" x="42" y="54" width="247" height="16"/><text class="axv" x="295" y="66">295</text>
+            <rect class="bar" x="42" y="78" width="151" height="16"/><text class="axv" x="199" y="90">180</text>
+            <rect class="bar" x="42" y="102" width="80" height="16"/><text class="axv" x="128" y="114">95</text>
+            <rect class="bar" x="42" y="126" width="34" height="16"/><text class="axv" x="82" y="138">40</text>
+          </svg></div>
+        </div>
+
+        <!-- 2 hiring trend -->
+        <div class="mcard mard">
+          <div class="mt">2 · Hiring trend, 2024</div>
+          <div class="msub"><b>area + endpoint</b> · Recharts AreaChart · "how did hiring track through 2024?"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Monthly hires 2024, rising from 8 in January to a peak of 21 in October, 13 in December">
+            <g class="grid"><line x1="40" y1="20" x2="352" y2="20"/><line x1="40" y1="130" x2="352" y2="130"/></g>
+            <text class="axv" x="36" y="24" text-anchor="end">24</text><text class="axv" x="36" y="134" text-anchor="end">0</text>
+            <path d="M46,120 L74,105 L102,111 L130,86 L158,92 L186,63 L214,72 L242,45 L270,54 L298,24 L326,39 L352,63 L352,130 L46,130 Z" fill="var(--accent)" opacity=".13"/>
+            <polyline class="ser" points="46,120 74,105 102,111 130,86 158,92 186,63 214,72 242,45 270,54 298,24 326,39 352,63"/>
+            <circle class="dot" cx="352" cy="63" r="3.5"/>
+            <g class="ax"><text x="46" y="146">Jan</text><text x="186" y="146">Jun</text><text x="326" y="146">Nov</text></g>
+          </svg></div>
+        </div>
+
+        <!-- 3 funnel -->
+        <div class="mcard mard">
+          <div class="mt">3 · Recruiting funnel</div>
+          <div class="msub"><b>funnel + stage conversion</b> · Tremor / stacked bars</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Funnel: Applied 1240, Screen 430 at 35 percent, Onsite 180 at 42 percent, Offer 72 at 40 percent, Hire 58 at 81 percent">
+            <g>
+              <rect class="bar" x="40" y="6" width="300" height="20"/><text class="axv" x="346" y="21">Applied 1,240</text>
+              <rect class="bar" x="76" y="34" width="228" height="20" opacity=".85"/><text class="axv" x="310" y="49">Screen 430</text><text class="ax" x="40" y="49">35%↓</text>
+              <rect class="bar" x="112" y="62" width="156" height="20" opacity=".7"/><text class="axv" x="274" y="77">Onsite 180</text><text class="ax" x="40" y="77">42%↓</text>
+              <rect class="bar" x="140" y="90" width="100" height="20" opacity=".55"/><text class="axv" x="246" y="105">Offer 72</text><text class="ax" x="40" y="105">40%↓</text>
+              <rect class="bar" x="150" y="118" width="80" height="20" opacity=".42"/><text class="axv" x="236" y="133">Hire 58</text><text class="ax" x="40" y="133">81%↓</text>
+            </g>
+          </svg></div>
+        </div>
+
+        <!-- 4 time to fill distribution -->
+        <div class="mcard mard">
+          <div class="mt">4 · Time-to-fill distribution</div>
+          <div class="msub"><b>histogram + median</b> · Recharts BarChart · "is 62 days typical or skewed?"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Days-to-fill histogram: 0-20:6, 20-40:19, 40-60:31, 60-80:22, 80-100:12, 100 plus:7. Median line at 54 days.">
+            <line class="grid" x1="40" y1="132" x2="352" y2="132"/>
+            <rect class="bar" x="48"  y="115" width="40" height="17"/>
+            <rect class="bar" x="96"  y="78"  width="40" height="54"/>
+            <rect class="bar" x="144" y="42"  width="40" height="90"/>
+            <rect class="bar" x="192" y="70"  width="40" height="62"/>
+            <rect class="bar" x="240" y="98"  width="40" height="34"/>
+            <rect class="bar" x="288" y="112" width="40" height="20"/>
+            <line x1="171" y1="16" x2="171" y2="140" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <text class="ax" x="171" y="12" text-anchor="middle">median 54d</text>
+            <g class="ax"><text x="52" y="146">0</text><text x="148" y="146">40</text><text x="244" y="146">80</text><text x="316" y="146">100+</text></g>
+          </svg></div>
+        </div>
+
+        <!-- 5 composition donut -->
+        <div class="mcard mard">
+          <div class="mt">5 · Headcount composition</div>
+          <div class="msub"><b>donut, total in center</b> · Recharts PieChart · "what share is each job family?"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Headcount share: Engineering 43 percent, Sales 22, Product 14, Design 11, Marketing 10. Total 1,184.">
+            <g transform="translate(85,85)">
+              <circle r="52" fill="none" stroke="var(--inset)" stroke-width="20"/>
+              <circle r="52" fill="none" stroke="var(--accent)" stroke-width="20" stroke-dasharray="140.4 326.6" transform="rotate(-90)"/>
+              <circle r="52" fill="none" stroke="var(--accent)" stroke-width="20" opacity=".72" stroke-dasharray="71.8 326.6" transform="rotate(64.8)"/>
+              <circle r="52" fill="none" stroke="var(--accent)" stroke-width="20" opacity=".5" stroke-dasharray="45.7 326.6" transform="rotate(144)"/>
+              <circle r="52" fill="none" stroke="var(--accent)" stroke-width="20" opacity=".34" stroke-dasharray="35.9 326.6" transform="rotate(183.6)"/>
+              <circle r="52" fill="none" stroke="var(--accent)" stroke-width="20" opacity=".22" stroke-dasharray="32.6 326.6" transform="rotate(216)"/>
+              <text text-anchor="middle" y="-2" style="font:600 20px 'IBM Plex Mono',monospace; fill:var(--ink)">1,184</text>
+              <text text-anchor="middle" y="14" class="ax">total</text>
+            </g>
+            <g class="axv" transform="translate(178,34)">
+              <rect x="0" y="-8" width="9" height="9" class="bar"/><text x="16" y="0">Engineering 43%</text>
+              <rect x="0" y="14" width="9" height="9" class="bar" opacity=".72"/><text x="16" y="22">Sales 22%</text>
+              <rect x="0" y="36" width="9" height="9" class="bar" opacity=".5"/><text x="16" y="44">Product 14%</text>
+              <rect x="0" y="58" width="9" height="9" class="bar" opacity=".34"/><text x="16" y="66">Design 11%</text>
+              <rect x="0" y="80" width="9" height="9" class="bar" opacity=".22"/><text x="16" y="88">Marketing 10%</text>
+            </g>
+          </svg></div>
+        </div>
+
+        <!-- 6 cohort retention -->
+        <div class="mcard mard">
+          <div class="mt">6 · Hire cohort retention</div>
+          <div class="msub"><b>heatmap table</b> · HTML + colour scale · "do Q1 hires stay?"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Retention heatmap by hire month Jan to Jun across months 0 to 5, values decline from 100 to the low 80s and 70s.">
+            <g class="ax"><text x="40" y="12">mo</text><text x="70" y="12">0</text><text x="115" y="12">1</text><text x="160" y="12">2</text><text x="205" y="12">3</text><text x="250" y="12">4</text><text x="295" y="12">5</text></g>
+            <g class="axv" text-anchor="end">
+              <text x="34" y="32">Jan</text><text x="34" y="56">Feb</text><text x="34" y="80">Mar</text><text x="34" y="104">Apr</text><text x="34" y="128">May</text><text x="34" y="152">Jun</text>
+            </g>
+            <g>
+              <!-- Jan --><rect x="52" y="22" width="40" height="18" fill="var(--accent)"/><rect x="97" y="22" width="40" height="18" fill="var(--accent)" opacity=".82"/><rect x="142" y="22" width="40" height="18" fill="var(--accent)" opacity=".68"/><rect x="187" y="22" width="40" height="18" fill="var(--accent)" opacity=".6"/><rect x="232" y="22" width="40" height="18" fill="var(--accent)" opacity=".54"/><rect x="277" y="22" width="40" height="18" fill="var(--accent)" opacity=".5"/>
+              <!-- Feb --><rect x="52" y="46" width="40" height="18" fill="var(--accent)"/><rect x="97" y="46" width="40" height="18" fill="var(--accent)" opacity=".86"/><rect x="142" y="46" width="40" height="18" fill="var(--accent)" opacity=".7"/><rect x="187" y="46" width="40" height="18" fill="var(--accent)" opacity=".62"/><rect x="232" y="46" width="40" height="18" fill="var(--accent)" opacity=".56"/><rect x="277" y="46" width="40" height="18" fill="var(--inset)"/>
+              <!-- Mar --><rect x="52" y="70" width="40" height="18" fill="var(--accent)"/><rect x="97" y="70" width="40" height="18" fill="var(--accent)" opacity=".8"/><rect x="142" y="70" width="40" height="18" fill="var(--accent)" opacity=".64"/><rect x="187" y="70" width="40" height="18" fill="var(--accent)" opacity=".58"/><rect x="232" y="70" width="40" height="18" fill="var(--inset)"/><rect x="277" y="70" width="40" height="18" fill="var(--inset)"/>
+              <!-- Apr --><rect x="52" y="94" width="40" height="18" fill="var(--accent)"/><rect x="97" y="94" width="40" height="18" fill="var(--accent)" opacity=".78"/><rect x="142" y="94" width="40" height="18" fill="var(--accent)" opacity=".6"/><rect x="187" y="94" width="40" height="18" fill="var(--inset)"/><rect x="232" y="94" width="40" height="18" fill="var(--inset)"/><rect x="277" y="94" width="40" height="18" fill="var(--inset)"/>
+              <!-- May --><rect x="52" y="118" width="40" height="18" fill="var(--accent)"/><rect x="97" y="118" width="40" height="18" fill="var(--accent)" opacity=".74"/><rect x="142" y="118" width="40" height="18" fill="var(--inset)"/><rect x="187" y="118" width="40" height="18" fill="var(--inset)"/><rect x="232" y="118" width="40" height="18" fill="var(--inset)"/><rect x="277" y="118" width="40" height="18" fill="var(--inset)"/>
+              <!-- Jun --><rect x="52" y="142" width="40" height="18" fill="var(--accent)"/><rect x="97" y="142" width="40" height="18" fill="var(--inset)"/><rect x="142" y="142" width="40" height="18" fill="var(--inset)"/><rect x="187" y="142" width="40" height="18" fill="var(--inset)"/><rect x="232" y="142" width="40" height="18" fill="var(--inset)"/><rect x="277" y="142" width="40" height="18" fill="var(--inset)"/>
+            </g>
+            <g class="ax" fill="#fff"><text x="72" y="35" text-anchor="middle">100</text><text x="297" y="35" text-anchor="middle">80</text></g>
+          </svg></div>
+        </div>
+
+        <!-- 7 req aging -->
+        <div class="mcard mard">
+          <div class="mt">7 · Requisition aging</div>
+          <div class="msub"><b>bars, threshold colour at 60d</b> · Recharts + cell colour</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Open req age in days: Sr Backend 84 over, Data Eng 71 over, Designer II 67 over, Recruiter 45 ok, PMM 31 ok, AE EMEA 22 ok. Threshold 60 days.">
+            <line x1="150" y1="6" x2="150" y2="150" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text class="ax" x="150" y="164" text-anchor="middle">60d threshold</text>
+            <g class="axv" text-anchor="end">
+              <text x="86" y="18">Sr Backend</text><text x="86" y="42">Data Eng</text><text x="86" y="66">Designer II</text><text x="86" y="90">Recruiter</text><text x="86" y="114">PMM</text><text x="86" y="138">AE, EMEA</text>
+            </g>
+            <rect class="thr-bad" x="92" y="6"   width="196" height="16"/><text class="axv" x="294" y="18">84</text>
+            <rect class="thr-bad" x="92" y="30"  width="166" height="16"/><text class="axv" x="264" y="42">71</text>
+            <rect class="thr-bad" x="92" y="54"  width="156" height="16"/><text class="axv" x="254" y="66">67</text>
+            <rect class="thr-ok"  x="92" y="78"  width="105" height="16"/><text class="axv" x="203" y="90">45</text>
+            <rect class="thr-ok"  x="92" y="102" width="72"  height="16"/><text class="axv" x="170" y="114">31</text>
+            <rect class="thr-ok"  x="92" y="126" width="51"  height="16"/><text class="axv" x="149" y="138">22</text>
+          </svg></div>
+        </div>
+
+        <!-- 8 offer accept bullet -->
+        <div class="mcard mard">
+          <div class="mt">8 · Offer accept vs target</div>
+          <div class="msub"><b>bullet chart</b> · Tremor Tracker / custom · target 85%</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Offer accept rate by family against an 85 percent target: Engineering 88 over, Design 91 over, Product 84 under, Sales 79 under, Marketing 76 under.">
+            <g class="axv" text-anchor="end">
+              <text x="80" y="20">Engineering</text><text x="80" y="48">Design</text><text x="80" y="76">Product</text><text x="80" y="104">Sales</text><text x="80" y="132">Marketing</text>
+            </g>
+            <g>
+              <rect x="88" y="10"  width="248" height="14" fill="var(--inset)"/><rect x="88" y="10"  width="218" height="14" class="bar"/>
+              <rect x="88" y="38"  width="248" height="14" fill="var(--inset)"/><rect x="88" y="38"  width="226" height="14" class="bar"/>
+              <rect x="88" y="66"  width="248" height="14" fill="var(--inset)"/><rect x="88" y="66"  width="208" height="14" class="bar"/>
+              <rect x="88" y="94"  width="248" height="14" fill="var(--inset)"/><rect x="88" y="94"  width="196" height="14" class="bar"/>
+              <rect x="88" y="122" width="248" height="14" fill="var(--inset)"/><rect x="88" y="122" width="188" height="14" class="bar"/>
+              <line x1="299" y1="4" x2="299" y2="142" stroke="var(--ink)" stroke-width="1.5"/><text class="ax" x="299" y="156" text-anchor="middle">target 85%</text>
+            </g>
+          </svg></div>
+        </div>
+
+        <!-- 9 source effectiveness -->
+        <div class="mcard mard">
+          <div class="mt">9 · Source effectiveness</div>
+          <div class="msub"><b>bars + conversion line</b> · Recharts ComposedChart</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Applicants by source with hire-conversion overlay: Referral 180 at 12 percent, LinkedIn 460 at 4, Job board 520 at 2.5, Agency 90 at 9, Inbound 140 at 6.">
+            <line class="grid" x1="40" y1="132" x2="340" y2="132"/>
+            <g>
+              <rect class="bar-soft" x="52"  y="88"  width="34" height="44"/>
+              <rect class="bar-soft" x="112" y="46"  width="34" height="86"/>
+              <rect class="bar-soft" x="172" y="34"  width="34" height="98"/>
+              <rect class="bar-soft" x="232" y="108" width="34" height="24"/>
+              <rect class="bar-soft" x="292" y="98"  width="34" height="34"/>
+            </g>
+            <polyline class="ser" points="69,44 129,104 189,116 249,66 309,90"/>
+            <g class="dot"><circle cx="69" cy="44" r="3"/><circle cx="129" cy="104" r="3"/><circle cx="189" cy="116" r="3"/><circle cx="249" cy="66" r="3"/><circle cx="309" cy="90" r="3"/></g>
+            <g class="ax" text-anchor="middle"><text x="69" y="146">Refer</text><text x="129" y="146">LinkedIn</text><text x="189" y="146">Job bd</text><text x="249" y="146">Agency</text><text x="309" y="146">Inbnd</text></g>
+            <text class="ax" x="69" y="38" text-anchor="middle">12%</text>
+          </svg></div>
+        </div>
+
+        <!-- 10 scalar tile -->
+        <div class="mcard mard">
+          <div class="mt">10 · Scalar answer + citation</div>
+          <div class="msub"><b>big-number tile</b> · shadcn Card · "how many active in Engineering?"</div>
+          <div class="mcanvas"><svg viewBox="0 0 360 170" role="img" aria-label="Scalar tile: 43 active in Engineering, grounded in 2 records emp_0006 and emp_0007.">
+            <rect x="20" y="16" width="320" height="138" rx="12" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="40" y="46" style="font:500 10px 'IBM Plex Mono',monospace; fill:var(--faint); letter-spacing:1px">HEADCOUNT · ACTIVE · ENGINEERING</text>
+            <text x="40" y="98" style="font:600 44px 'IBM Plex Mono',monospace; fill:var(--accent-ink)">43</text>
+            <text x="40" y="128" style="font:400 12px 'IBM Plex Mono',monospace; fill:var(--muted)">grounded in 2 records · emp_0006, emp_0007</text>
+            <text x="40" y="146" style="font:400 11px 'IBM Plex Mono',monospace; fill:var(--faint)">fields: active, jobFamilyId</text>
+          </svg></div>
+        </div>
+
+      </div>
+      <p class="note"><b>Phase 3</b> ships views 1–5 (they reuse metrics you already compute). <b>Phase 3.5</b> adds 6–9 — one
+        new executor aggregation each. View 10 exists today; it just gets the type treatment.</p>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- HOME -->
+  <section class="bay" id="home">
+    <div class="bay-head">
+      <span class="slug">HOME</span><h2>Landing page</h2>
+      <p class="q">Low-fidelity but real layout and real copy (lifted from your current <code>/</code>). Not dashed boxes.</p>
+    </div>
+    <div class="stage">
+      <div class="row c2" style="align-items:start">
+        <div class="cell">
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><span>askyourhiringdata.com</span></div>
+            <div class="view">
+              <div class="m-h1">Ask your hiring data.</div>
+              <div class="m-sub">Plain-English questions over a read-only hiring dataset. Grounded, role-scoped answers with a chart — the model proposes a validated query, code decides.</div>
+              <div style="display:flex;gap:8px"><span class="m-cta">Create a workspace</span><span class="m-ghost">See an example</span></div>
+              <div class="m-shot">
+                <span class="l">answer · headcount</span>
+                <span class="a">43 active · Engineering</span>
+                <svg viewBox="0 0 300 40" height="40" preserveAspectRatio="none" aria-hidden="true"><rect x="4" y="10" width="150" height="9" class="bar"/><rect x="4" y="24" width="92" height="9" class="bar" opacity=".55"/></svg>
+                <span class="l" style="text-transform:none;color:var(--muted)">grounded in 2 records · emp_0006, emp_0007</span>
+              </div>
+              <div class="m-bento">
+                <div><b>Ask, don't build</b>English, not another dashboard.</div>
+                <div><b>Grounded</b>Cites the exact records &amp; fields.</div>
+                <div><b>Role-scoped</b>Recruiter sees their families; CHRO sees the org.</div>
+                <div><b>IR boundary</b>The model never writes SQL.</div>
+              </div>
+            </div>
+          </div>
+          <div class="cap"><div class="name">A · product-forward hero + bento <span class="rec-tag">rec</span></div><div class="why">The answer card <em>is</em> the pitch. One CTA. Bento carries your four differentiators.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><span>askyourhiringdata.com</span></div>
+            <div class="view">
+              <div class="m-h1">The model proposes. Code decides.</div>
+              <div class="m-sub">A read-only analytics assistant for hiring data.</div>
+              <span class="m-cta">Create a workspace</span>
+              <div class="m-term">
+                <div><span class="p">you ›</span> how many people are active in engineering?</div>
+                <div class="o">// validated query IR</div>
+                <div>{ metric: "headcount", filter: { jobFamily: "Engineering", active: true } }</div>
+                <div class="o">// executor · grounded</div>
+                <div>→ 43 &nbsp;<span class="o">(emp_0006, emp_0007, …)</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="cap"><div class="name">B · minimal dev-tool</div><div class="why">Leans into the IR reveal. Sharper for a technical buyer; less legible to a CHRO.</div></div>
+        </div>
+      </div>
+      <p class="note">Option C (keep current content, new theme/type only) isn't drawn — it's just the existing feature list restyled.</p>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- LOGIN -->
+  <section class="bay" id="login">
+    <div class="bay-head">
+      <span class="slug">LOGIN</span><h2>Auth pages</h2>
+    </div>
+    <div class="stage">
+      <div class="row c2" style="align-items:start">
+        <div class="cell">
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><span>/signup</span></div>
+            <div class="m-split">
+              <div class="m-form">
+                <div style="font-weight:600;font-size:14px">Create your workspace</div>
+                <div class="fld filled">Test User</div>
+                <div class="fld filled">you@company.com</div>
+                <div class="fld">Password</div>
+                <div class="fld filled">Acme Inc</div>
+                <span class="m-cta" style="align-self:stretch;text-align:center">Create workspace</span>
+                <div style="font-size:10px;color:var(--muted)">Already have one? Sign in</div>
+              </div>
+              <div class="m-aside">
+                <div style="color:var(--ink);font-weight:600;font-size:13px">Grounded answers over your hiring data.</div>
+                <div>+ cites every record &nbsp; + role-scoped &nbsp; + read-only</div>
+                <div class="rolechips"><span>OWNER</span><span>ADMIN</span><span>CHRO</span><span>RECRUITER</span><span>VIEWER</span></div>
+                <div style="margin-top:auto;border-top:1px solid var(--line);padding-top:8px">We generate a demo hiring dataset for <b style="color:var(--ink)">Acme Inc</b> the moment you land.</div>
+              </div>
+            </div>
+          </div>
+          <div class="cap"><div class="name">A · split screen <span class="rec-tag">rec</span></div><div class="why">Explains the seeded-data magic and the RBAC story before they're in.</div></div>
+        </div>
+
+        <div class="cell">
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><span>/login</span></div>
+            <div class="view" style="align-items:center;padding:36px 18px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--muted)">ASK YOUR HIRING DATA</div>
+              <div style="width:min(280px,100%);display:flex;flex-direction:column;gap:9px;margin-top:6px">
+                <div style="font-weight:600;font-size:15px;text-align:center">Sign in</div>
+                <div class="fld filled" style="border:1px solid var(--line-strong);border-radius:7px;padding:9px 11px;font-size:11px">you@company.com</div>
+                <div class="fld" style="border:1px solid var(--line-strong);border-radius:7px;padding:9px 11px;font-size:11px;color:var(--faint)">Password</div>
+                <span class="m-cta" style="align-self:stretch;text-align:center">Sign in</span>
+                <div style="font-size:10px;color:var(--muted);text-align:center">New here? Create a workspace</div>
+              </div>
+            </div>
+          </div>
+          <div class="cap"><div class="name">B · centered card</div><div class="why">Crisp and fast to build. Wastes the signup moment — no story told.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="r" />
+
+  <!-- SHELL -->
+  <section class="bay" id="shell">
+    <div class="bay-head">
+      <span class="slug">SHELL</span><h2>The whole thing assembled</h2>
+      <p class="q">Your sidebar (built) + a new top bar + <code>Ask / Dashboard / Explore</code> tabs, with the Dashboard tab populated.</p>
+    </div>
+    <div class="stage">
+      <div class="mock">
+        <div class="chrome"><i></i><i></i><i></i><span>/app · Dashboard</span></div>
+        <div class="m-shell">
+          <div class="m-side">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);letter-spacing:.1em">+ NEW CHAT</div>
+            <div class="item">Headcount Q&amp;A</div>
+            <div class="item">Time to fill by team</div>
+            <div class="item">2024 hiring recap</div>
+            <div style="margin-top:auto"></div>
+            <div class="item">Members</div>
+            <div class="item">Settings</div>
+            <div class="item" style="border:1px solid var(--line);border-radius:6px">Acme Inc · OWNER</div>
+          </div>
+          <div class="m-main">
+            <div class="m-top">app / dashboard <span>·</span> last 90 days ▾ <span class="badge">OWNER</span></div>
+            <div class="m-tabs"><span>Ask</span><span class="on">Dashboard</span><span>Explore</span></div>
+            <div class="m-body">
+              <div class="m-krow">
+                <div><div class="kl">Headcount</div><div class="kv">1,184</div></div>
+                <div><div class="kl">Open reqs</div><div class="kv">18</div></div>
+                <div><div class="kl">Time to fill</div><div class="kv">61.9<span style="font-size:9px;color:var(--muted)">d</span></div></div>
+                <div><div class="kl">Offer accept</div><div class="kv">82<span style="font-size:9px;color:var(--muted)">%</span></div></div>
+              </div>
+              <div class="m-2">
+                <div class="box">
+                  <div class="kl" style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)">Hiring trend, 2024</div>
+                  <svg viewBox="0 0 260 76" height="76" preserveAspectRatio="none" aria-hidden="true"><path d="M6,60 L28,52 L50,55 L72,42 L94,46 L116,30 L138,35 L160,20 L182,26 L204,10 L226,18 L254,30 L254,76 L6,76 Z" fill="var(--accent)" opacity=".13"/><polyline class="ser" points="6,60 28,52 50,55 72,42 94,46 116,30 138,35 160,20 182,26 204,10 226,18 254,30"/><circle class="dot" cx="254" cy="30" r="3"/></svg>
+                </div>
+                <div class="box">
+                  <div class="kl" style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)">Headcount by band</div>
+                  <svg viewBox="0 0 260 76" height="76" aria-hidden="true"><rect class="bar" x="4" y="6" width="120" height="9"/><rect class="bar" x="4" y="20" width="196" height="9"/><rect class="bar" x="4" y="34" width="170" height="9"/><rect class="bar" x="4" y="48" width="104" height="9"/><rect class="bar" x="4" y="62" width="54" height="9"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cap" style="margin-top:14px"><div class="name">Ask / Dashboard / Explore</div><div class="why"><b>Dashboard</b> = fixed curated set. <b>Explore</b> = pick a metric + breakdown, get the matching MODELS view + the underlying rows. Both reuse the executor.</div></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>Pick what you can see.</b> Reply keyed like &nbsp;ACCENT: indigo · MODE: dark · KPI: B · TYPE: geist · ICONS: lucide+tabler · HOME: A · LOGIN: A · SHELL: tabs &nbsp;— and whether MODELS ships as the phased 10 or a subset first.
+  </div>
+
+</div>

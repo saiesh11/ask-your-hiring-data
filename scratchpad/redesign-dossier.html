@@ -1,0 +1,935 @@
+<title>Hiring Data Redesign Dossier</title>
+<meta name="description" content="Design options for the Ask Your Hiring Data app — icons, theme, type, KPI cards, charts, analytical views, home and login — each with a recommendation to pick." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+
+<style>
+  :root {
+    --paper:#FCFCFB; --surface:#FFFFFF; --surface-2:#F3F3F1; --inset:#EDEDEA;
+    --ink:#17181B; --muted:#5F636A; --faint:#8B8F96;
+    --line:#E4E3DE; --line-strong:#D2D1CB;
+    --accent:#3B4CE0; --accent-ink:#2C3AC0; --accent-soft:#ECEDFB;
+    --pick:#2E7D53; --pick-soft:#E7F3EC;
+    --flag:#A45B1F; --flag-soft:#F6EEE2;
+    --shadow:0 1px 2px rgba(20,20,25,.04), 0 10px 30px -14px rgba(20,20,25,.14);
+    --radius:10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0F1013; --surface:#16171B; --surface-2:#1C1E22; --inset:#22242A;
+      --ink:#EAEAE8; --muted:#9BA0A7; --faint:#767B82;
+      --line:#292B31; --line-strong:#393B42;
+      --accent:#8592FF; --accent-ink:#A7B0FF; --accent-soft:#1A1D33;
+      --pick:#5CBE87; --pick-soft:#14271E;
+      --flag:#D68F4E; --flag-soft:#2A2013;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 14px 36px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1013; --surface:#16171B; --surface-2:#1C1E22; --inset:#22242A;
+    --ink:#EAEAE8; --muted:#9BA0A7; --faint:#767B82;
+    --line:#292B31; --line-strong:#393B42;
+    --accent:#8592FF; --accent-ink:#A7B0FF; --accent-soft:#1A1D33;
+    --pick:#5CBE87; --pick-soft:#14271E;
+    --flag:#D68F4E; --flag-soft:#2A2013;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 14px 36px -16px rgba(0,0,0,.55);
+  }
+
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:15px; line-height:1.6; font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1060px; margin:0 auto; padding:0 24px 120px; }
+
+  /* ---- masthead ---- */
+  .mast {
+    padding:64px 0 40px; border-bottom:1px solid var(--line-strong);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:32px 32px; background-position:-1px -1px;
+    position:relative;
+  }
+  .mast::after {
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 0%, var(--paper) 92%);
+    pointer-events:none;
+  }
+  .mast > * { position:relative; z-index:1; }
+  .kicker {
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:11.5px; font-weight:500;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .kicker .dot { width:5px; height:5px; border-radius:50%; background:var(--accent); }
+  h1.title {
+    font-weight:700; letter-spacing:-.035em; line-height:1.02;
+    font-size:clamp(38px, 6vw, 62px); margin:18px 0 0; text-wrap:balance; max-width:16ch;
+  }
+  .standfirst { margin:20px 0 0; max-width:64ch; color:var(--muted); font-size:16.5px; }
+  .standfirst strong { color:var(--ink); font-weight:600; }
+
+  .meta-row { display:flex; gap:28px; flex-wrap:wrap; margin-top:28px; }
+  .meta-row .m {
+    font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--muted);
+  }
+  .meta-row .m b { color:var(--ink); font-weight:600; display:block; letter-spacing:.02em; }
+
+  /* ---- section frame ---- */
+  section { padding-top:56px; }
+  .slug {
+    font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600;
+    letter-spacing:.14em; color:var(--accent-ink);
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 9px; border:1px solid var(--line-strong); border-radius:6px;
+    background:var(--surface-2);
+  }
+  h2 {
+    font-weight:600; letter-spacing:-.02em; font-size:26px; margin:16px 0 6px; text-wrap:balance;
+  }
+  .frame { color:var(--muted); max-width:70ch; margin:0 0 22px; }
+  .frame code { font-family:"IBM Plex Mono", monospace; font-size:.88em; background:var(--inset); padding:1px 5px; border-radius:4px; color:var(--ink); }
+
+  /* ---- ledger ---- */
+  .ledger { width:100%; border-collapse:collapse; margin-top:22px; font-size:13.5px; }
+  .ledger th {
+    text-align:left; font-family:"IBM Plex Mono", monospace; font-weight:500;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint);
+    padding:0 14px 10px; border-bottom:1px solid var(--line-strong);
+  }
+  .ledger td { padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .ledger tr:last-child td { border-bottom:none; }
+  .ledger .k { font-family:"IBM Plex Mono", monospace; font-weight:600; color:var(--accent-ink); white-space:nowrap; }
+  .ledger .rec { color:var(--ink); }
+  .ledger .st {
+    font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.06em;
+    color:var(--flag); background:var(--flag-soft); padding:2px 7px; border-radius:20px; white-space:nowrap;
+  }
+  .ledger tr:hover td { background:var(--surface-2); }
+
+  /* ---- option list ---- */
+  .opts { display:grid; gap:14px; margin-top:8px; }
+  .opt {
+    display:grid; grid-template-columns:auto 1fr; gap:16px;
+    border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px;
+    background:var(--surface);
+  }
+  .opt.pick { border-color:color-mix(in oklab, var(--pick) 55%, var(--line)); background:var(--surface); box-shadow:var(--shadow); }
+  .opt .tag {
+    font-family:"IBM Plex Mono", monospace; font-weight:600; font-size:13px;
+    width:26px; height:26px; display:grid; place-items:center;
+    border:1px solid var(--line-strong); border-radius:7px; color:var(--muted); background:var(--surface-2);
+  }
+  .opt.pick .tag { color:#fff; background:var(--pick); border-color:var(--pick); }
+  .opt h3 { margin:2px 0 0; font-size:16px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .badge-rec {
+    font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--pick); border:1px solid color-mix(in oklab, var(--pick) 45%, transparent);
+    background:var(--pick-soft); padding:2px 7px; border-radius:20px; font-weight:600;
+  }
+  .opt .what { color:var(--muted); font-size:13.5px; margin:6px 0 0; }
+  .pc { display:grid; grid-template-columns:1fr 1fr; gap:6px 22px; margin-top:12px; font-size:13px; }
+  @media (max-width:620px){ .pc { grid-template-columns:1fr; } .opt { grid-template-columns:1fr; } }
+  .pc ul { margin:0; padding:0; list-style:none; }
+  .pc li { position:relative; padding-left:18px; color:var(--muted); margin:3px 0; }
+  .pc .pro li::before { content:"+"; position:absolute; left:2px; color:var(--pick); font-family:"IBM Plex Mono", monospace; font-weight:600; }
+  .pc .con li::before { content:"–"; position:absolute; left:2px; color:var(--flag); font-family:"IBM Plex Mono", monospace; font-weight:600; }
+  .pc b { color:var(--ink); font-weight:600; }
+
+  /* ---- swatches ---- */
+  .swatch-row { display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; }
+  .sw { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; width:150px; background:var(--surface); }
+  .sw .chip { height:58px; display:flex; align-items:flex-end; padding:8px; }
+  .sw .chip span { font-family:"IBM Plex Mono", monospace; font-size:10px; color:#fff; mix-blend-mode:difference; }
+  .sw .lab { padding:8px 10px; font-size:12px; }
+  .sw .lab b { display:block; font-weight:600; }
+  .sw .lab code { font-family:"IBM Plex Mono", monospace; font-size:10.5px; color:var(--muted); }
+
+  /* ---- specimen ---- */
+  .specimen { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; }
+  @media (max-width:620px){ .specimen { grid-template-columns:1fr; } }
+  .spec-card { border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; background:var(--surface); }
+  .spec-card .h { font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
+  .spec-num { font-size:34px; font-weight:600; letter-spacing:-.02em; margin-top:6px; }
+  .spec-num.prop { font-variant-numeric:normal; }
+  .spec-num.tab { font-variant-numeric:tabular-nums; }
+  .spec-note { font-size:12px; color:var(--muted); margin-top:6px; }
+
+  .scale { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+  .scale td { padding:8px 12px; border-bottom:1px solid var(--line); }
+  .scale td:first-child { font-family:"IBM Plex Mono", monospace; color:var(--muted); width:120px; white-space:nowrap; }
+
+  /* ---- KPI mockups ---- */
+  .kpis { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:16px; }
+  @media (max-width:760px){ .kpis { grid-template-columns:1fr; } }
+  .kcard {
+    border:1px solid var(--line); border-radius:var(--radius); padding:16px; background:var(--surface);
+    display:flex; flex-direction:column; gap:8px; min-height:132px;
+  }
+  .kcard .klabel { font-size:11.5px; font-family:"IBM Plex Mono", monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); display:flex; justify-content:space-between; align-items:center; }
+  .kcard .kval { font-size:28px; font-weight:600; letter-spacing:-.02em; line-height:1; }
+  .kcard .kunit { font-size:13px; color:var(--muted); font-weight:400; margin-left:4px; }
+  .kdelta { font-family:"IBM Plex Mono", monospace; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
+  .kdelta.up { color:var(--flag); }
+  .kdelta.down { color:var(--pick); }
+  .kdelta.flat { color:var(--muted); }
+  .kctx { font-size:11.5px; color:var(--muted); margin-top:auto; }
+  .kvariant { font-family:"IBM Plex Mono", monospace; font-size:10px; color:var(--accent-ink); letter-spacing:.06em; }
+
+  /* ---- models grid ---- */
+  .models { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px; }
+  @media (max-width:760px){ .models { grid-template-columns:1fr; } }
+  .model {
+    border:1px solid var(--line); border-radius:var(--radius); padding:16px; background:var(--surface);
+    display:grid; grid-template-columns:76px 1fr; gap:14px; align-items:start;
+  }
+  .model svg { display:block; width:76px; height:56px; }
+  .model .mq { font-weight:600; font-size:14px; letter-spacing:-.01em; }
+  .model .mmeta { font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5; }
+  .model .mmeta b { color:var(--accent-ink); font-weight:600; }
+
+  /* ---- wireframes ---- */
+  .wire {
+    border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--surface-2);
+    padding:16px; margin-top:16px; overflow-x:auto;
+  }
+  .wire .canvas { min-width:520px; display:grid; gap:8px; }
+  .wbox {
+    border:1px dashed var(--line-strong); border-radius:6px; background:var(--surface);
+    padding:10px 12px; font-family:"IBM Plex Mono", monospace; font-size:11.5px; color:var(--muted);
+  }
+  .wbox.solid { border-style:solid; }
+  .wbox.accent { border-color:color-mix(in oklab, var(--accent) 40%, var(--line-strong)); color:var(--accent-ink); }
+  .wrow { display:grid; gap:8px; }
+  .wnote { font-size:12px; color:var(--muted); margin-top:10px; }
+
+  /* ---- callout ---- */
+  .callout {
+    border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px;
+    background:var(--surface); padding:14px 18px; margin-top:18px; font-size:13.5px; color:var(--muted);
+  }
+  .callout b { color:var(--ink); }
+
+  /* ---- plan ---- */
+  .plan { display:grid; gap:10px; margin-top:16px; counter-reset:p; }
+  .phase { display:grid; grid-template-columns:auto 1fr; gap:14px; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; background:var(--surface); }
+  .phase .pn {
+    counter-increment:p; font-family:"IBM Plex Mono", monospace; font-weight:600; font-size:12px;
+    width:44px; height:24px; display:grid; place-items:center; border-radius:6px;
+    background:var(--accent-soft); color:var(--accent-ink); align-self:start;
+  }
+  .phase .pn::before { content:"P" counter(p); }
+  .phase h4 { margin:0 0 3px; font-size:14px; font-weight:600; }
+  .phase p { margin:0; font-size:13px; color:var(--muted); }
+
+  /* ---- questions ---- */
+  .qs { display:grid; gap:12px; margin-top:16px; }
+  .q { border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; background:var(--surface); }
+  .q .qh { font-weight:600; font-size:14px; }
+  .q .qo { font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--muted); margin-top:5px; }
+  .q .qo b { color:var(--pick); }
+
+  hr.rule { border:none; border-top:1px solid var(--line); margin:56px 0 0; }
+
+  .foot { margin-top:64px; padding-top:24px; border-top:1px solid var(--line-strong); font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--faint); }
+  .foot b { color:var(--muted); font-weight:600; }
+
+  a { color:var(--accent-ink); text-decoration:none; border-bottom:1px solid color-mix(in oklab, var(--accent) 30%, transparent); }
+  a:hover { border-bottom-color:var(--accent); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:3px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker"><span class="dot"></span> Design dossier &nbsp;·&nbsp; Ask Your Hiring Data &nbsp;·&nbsp; 2026-09-03</div>
+    <h1 class="title">Hiring Data Redesign Dossier</h1>
+    <p class="standfirst">
+      The layout break was a <strong>stale dev server</strong> serving a half-compiled stylesheet — killed, cache
+      cleared, fresh server verified. That's done. This document is the next thing: <strong>every visual decision
+      laid out as two-to-four options with a recommendation</strong>, so we pick each one and then build. Scope covers
+      icons, the theme, typography, KPI cards, the chart layer, the analytical views, and the home and login pages.
+    </p>
+    <div class="meta-row">
+      <div class="m"><b>Locked stack</b> Next 16 · Tailwind v4 · shadcn new-york</div>
+      <div class="m"><b>Installed</b> lucide-react · recharts · sonner</div>
+      <div class="m"><b>How to reply</b> ICONS: A · THEME: B (indigo) · …</div>
+    </div>
+  </header>
+
+  <!-- LEDGER -->
+  <section id="ledger">
+    <span class="slug">LEDGER</span>
+    <h2>Every decision on one page</h2>
+    <p class="frame">Ten choices. My recommendation is in the middle column; all are <code>open</code> until you pick.
+      Details, tradeoffs and mockups for each are in the sections below.</p>
+    <table class="ledger">
+      <thead><tr><th>Key</th><th>Decision</th><th>Recommended</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="k">ICONS</td><td>Icon set for the whole product</td><td class="rec">Keep <b>Lucide</b>, add <b>Tabler</b> only for data glyphs</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">COMPONENTS</td><td>Where prebuilt blocks come from</td><td class="rec"><b>shadcn blocks</b> + <b>Tremor</b> for the analytics surface</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">THEME</td><td>Base neutral + accent + default mode</td><td class="rec">Neutral base, single <b>indigo</b> accent, <b>dark-first</b></td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">TYPE</td><td>Typeface and number formatting</td><td class="rec"><b>Geist Sans</b> UI + <b>Geist Mono</b> for every metric</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">KPI</td><td>The stat-card design</td><td class="rec">Variant <b>B</b> (label · value · delta · sparkline)</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">CHARTS</td><td>Charting library</td><td class="rec"><b>Recharts</b> via shadcn <code>Chart</code> wrapper</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">MODELS</td><td>Which analytical views to build</td><td class="rec">The <b>10-view set</b> below, phased</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">HOME</td><td>Landing-page format</td><td class="rec"><b>A</b> — product-forward hero + bento</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">LOGIN</td><td>Auth-page format</td><td class="rec"><b>A</b> — split screen, value panel right</td><td><span class="st">open</span></td></tr>
+        <tr><td class="k">SHELL</td><td>In-app layout around the sidebar</td><td class="rec">Add a <b>top bar</b> + <b>Ask / Dashboard / Explore</b> tabs</td><td><span class="st">open</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ICONS -->
+  <section id="icons">
+    <span class="slug">ICONS</span>
+    <h2>Icon set</h2>
+    <p class="frame">The product already imports <code>lucide-react</code>, and shadcn's generated components import Lucide
+      internally — so this is really "keep Lucide, or take on a migration." Every option here is MIT-licensed, tree-shaken per-icon, and React-native.</p>
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Lucide — keep it <span class="badge-rec">Recommended</span></h3>
+          <p class="what">1,500+ icons, one refined outline weight. The default of the shadcn ecosystem and most Figma kits.</p>
+          <div class="pc">
+            <ul class="pro"><li>Zero migration — <b>already wired</b></li><li>Matches every shadcn block you'll paste in</li><li>Consistent 24px grid, 1.5px stroke</li></ul>
+            <ul class="con"><li>One weight only — no fill/duotone for emphasis</li><li>Thin coverage on niche data glyphs (funnel, cohort, pivot)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>Lucide + Tabler supplement</h3>
+          <p class="what">Keep Lucide everywhere; pull the ~10 data-specific glyphs Lucide lacks from Tabler's 6,000-icon set.</p>
+          <div class="pc">
+            <ul class="pro"><li>Fills the analytics gaps (<b>chart-funnel, chart-dots, table-options</b>)</li><li>Tabler's stroke matches Lucide closely at 24px</li><li>Still per-icon imports, no bundle hit</li></ul>
+            <ul class="con"><li>Two libraries to keep in your head</li><li>Slight stroke-cap mismatch if used side by side</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>Phosphor — full switch</h3>
+          <p class="what">1,200+ icons in six weights (thin → fill → duotone). More expressive, more work.</p>
+          <div class="pc">
+            <ul class="pro"><li>Weight range gives real emphasis control</li><li>Duotone reads well for a marketing home page</li></ul>
+            <ul class="con"><li>Re-icon <b>every</b> shadcn component you've added</li><li>Different visual language than the blocks ecosystem</li><li>No payoff for a data tool that wants restraint</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- COMPONENTS -->
+  <section id="components">
+    <span class="slug">COMPONENTS</span>
+    <h2>Where prebuilt blocks come from</h2>
+    <p class="frame">shadcn/ui is the base — you own the code, no runtime dependency. The question is what you layer on for
+      the parts shadcn doesn't ship: full dashboard blocks, KPI cards, and the marketing pages. All of these are copy-in
+      source, Tailwind + Radix, same as shadcn.</p>
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>shadcn blocks + Tremor <span class="badge-rec">Recommended</span></h3>
+          <p class="what">shadcn official <code>dashboard-01</code> block for the shell (sidebar + charts + data table). Tremor
+            (Vercel-owned, now fully free) for KPI cards, sparklines, bar-lists, trackers and the funnel.</p>
+          <div class="pc">
+            <ul class="pro"><li>Both are Recharts under the hood — <b>one chart runtime</b></li><li>Tremor's "show the data, hide the chrome" matches the product</li><li>KPI card, spark, funnel, cohort tracker all prebuilt</li><li>Nothing to license</li></ul>
+            <ul class="con"><li>Minor token reconciliation (Tremor uses its own CSS vars)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>shadcn blocks only</h3>
+          <p class="what">Stay 100% inside shadcn — official charts (11 types incl. KPI) plus <code>dashboard-01</code>. Hand-build the funnel and cohort.</p>
+          <div class="pc">
+            <ul class="pro"><li>Single system, single token set</li><li>Reference implementation everyone else copies</li></ul>
+            <ul class="con"><li>No prebuilt funnel / cohort / bullet — you write them</li><li>KPI card is barebones vs Tremor's</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>+ Origin UI / Kibo for form polish</h3>
+          <p class="what">Add A, then cherry-pick a few input/combobox/date-range pieces from Origin UI or Kibo UI for the query bar and filters.</p>
+          <div class="pc">
+            <ul class="pro"><li>Nicer multiselect, tag input, date-range than base shadcn</li><li>Still shadcn-compatible source</li></ul>
+            <ul class="con"><li>Third source to track</li><li>Easy to over-reach — only take 2–3 pieces</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout"><b>Not for this product:</b> Aceternity / Magic UI / Kokonut and the other animation-heavy kits.
+      They're built for marketing splash — beam borders, 3D tilt, scroll parallax. Fine to borrow <em>one</em> hero effect
+      for the home page; keep them out of the app, where motion competes with the data.</div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- THEME -->
+  <section id="theme">
+    <span class="slug">THEME</span>
+    <h2>Base neutral, accent, default mode</h2>
+    <p class="frame">Your tokens are already the shadcn <code>oklch</code> set with a <code>neutral</code> base. Three sub-decisions:
+      keep or swap the base, add an accent (right now primary is just near-black), and choose whether the app opens dark or light.</p>
+
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Neutral base + one indigo accent <span class="badge-rec">Recommended</span></h3>
+          <p class="what">Keep the neutral greys. Introduce a single saturated accent used only for: primary buttons, active nav,
+            links, focus rings, and the emphasized endpoint on charts. Everything else stays greyscale.</p>
+          <div class="pc">
+            <ul class="pro"><li>Accent draws the eye to <b>action and current value</b>, nothing else</li><li>Greyscale data reads honestly — color means something</li><li>One hue is easy to keep disciplined across 40 components</li></ul>
+            <ul class="con"><li>Needs a semantic scale (good/warn/critical) kept <em>separate</em> from the accent</li></ul>
+          </div>
+          <div class="swatch-row">
+            <div class="sw"><div class="chip" style="background:#3B4CE0"><span>#3B4CE0</span></div><div class="lab"><b>Indigo</b><code>oklch .53 .21 269</code></div></div>
+            <div class="sw"><div class="chip" style="background:#2563EB"><span>#2563EB</span></div><div class="lab"><b>Blue</b><code>oklch .55 .22 258</code></div></div>
+            <div class="sw"><div class="chip" style="background:#7C3AED"><span>#7C3AED</span></div><div class="lab"><b>Violet</b><code>oklch .53 .25 293</code></div></div>
+            <div class="sw"><div class="chip" style="background:#0D9488"><span>#0D9488</span></div><div class="lab"><b>Teal</b><code>oklch .58 .11 187</code></div></div>
+          </div>
+          <p class="spec-note">Pick a hue with your reply — indigo is my default: distinctive without the "AI purple gradient" read, works on both grounds.</p>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>tweakcn preset — "Vercel" or "Supabase"</h3>
+          <p class="what">Install a ready-made theme from tweakcn (one CLI line, exports standard shadcn vars). "Vercel" = crisp
+            black/white minimal; "Supabase" = neutral + signature green.</p>
+          <div class="pc">
+            <ul class="pro"><li>Fully-tuned light + dark in minutes</li><li>Shadows, radius, chart palette all set</li><li>Reversible — it's just CSS vars</li></ul>
+            <ul class="con"><li>"Supabase green" is a borrowed identity</li><li>Less ownership of the look</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>Keep exactly as-is (neutral, no accent)</h3>
+          <p class="what">Primary stays near-black; no color anywhere.</p>
+          <div class="pc">
+            <ul class="pro"><li>Zero work</li><li>Very "Linear/Vercel" austere</li></ul>
+            <ul class="con"><li>Nothing signals the active tab / primary action</li><li>Charts have no anchor color — every series competes</li><li>Reads unfinished for a paid SaaS</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout"><b>Default mode:</b> your screenshots were dark because of <code>defaultTheme="system"</code> + your OS.
+      I recommend committing <b>dark-first</b> (analytics tools are used heads-down; dark reduces chart glare) with a
+      polished light theme and the toggle already in the sidebar. Alternative: default light, which reads friendlier on the
+      marketing home. One call to make.</div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- TYPE -->
+  <section id="type">
+    <span class="slug">TYPE</span>
+    <h2>Typeface &amp; number formatting</h2>
+    <p class="frame">The app loads <code>Geist</code> today. For a data product the bigger lever isn't the sans — it's whether
+      numbers are set in a <b>tabular</b> face so columns and deltas line up. Right now they aren't.</p>
+
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Geist Sans for UI · Geist Mono for every metric <span class="badge-rec">Recommended</span></h3>
+          <p class="what">Keep Geist Sans for all interface text. Set every KPI value, table figure, axis label, delta and
+            record-ID in <b>Geist Mono</b> (or Geist Sans with <code>font-variant-numeric: tabular-nums</code>). One superfamily, two roles.</p>
+          <div class="pc">
+            <ul class="pro"><li>Numbers align vertically — scannable at a glance</li><li>Mono signals "this is data", matches the IR / dev-tool identity</li><li>Already loaded; Geist Mono is one more <code>next/font</code> line</li></ul>
+            <ul class="con"><li>Mono is wider — tight KPI cards need a size check</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>Inter + Inter tabular figures</h3>
+          <p class="what">Swap to Inter — the most-used dashboard face, high x-height, slashed-zero option, ships tabular figures.</p>
+          <div class="pc">
+            <ul class="pro"><li>Battle-tested for dense data UI</li><li>Proportional text + tabular digits in one face</li></ul>
+            <ul class="con"><li>Loses the Geist / Vercel identity you already have</li><li>Ubiquitous — reads generic</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>IBM Plex Sans + Plex Mono</h3>
+          <p class="what">A more technical, slightly institutional pairing (what this dossier is set in).</p>
+          <div class="pc">
+            <ul class="pro"><li>Strong sans/mono superfamily, great tabular figures</li><li>Distinct from the Geist/Inter default</li></ul>
+            <ul class="con"><li>Full font swap across the app</li><li>Heavier personality than the product needs</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="spec-card">
+        <div class="h">Proportional figures — today</div>
+        <div class="spec-num prop">61.9<span class="kunit"> days</span></div>
+        <div class="spec-num prop">1,184</div>
+        <div class="spec-note">Digits have different widths — a column of these zig-zags.</div>
+      </div>
+      <div class="spec-card">
+        <div class="h">Tabular / mono — proposed</div>
+        <div class="spec-num tab">61.9<span class="kunit"> days</span></div>
+        <div class="spec-num tab">1,184</div>
+        <div class="spec-note">Every digit one width — deltas and columns line up.</div>
+      </div>
+    </div>
+
+    <table class="scale">
+      <tr><td>display / 32–40</td><td>Page titles, the empty-state prompt. Weight 600, tracking −0.02em.</td></tr>
+      <tr><td>heading / 20–24</td><td>Section &amp; card titles. Weight 600.</td></tr>
+      <tr><td>body / 14–15</td><td>Answers, descriptions, table cells. Weight 400.</td></tr>
+      <tr><td>label / 11–12 mono</td><td>Uppercase, tracking 0.08em. Card labels, axis ticks, chips.</td></tr>
+      <tr><td>metric / 24–30 mono</td><td>KPI values. Tabular. This is the number people came for.</td></tr>
+    </table>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- KPI -->
+  <section id="kpi">
+    <span class="slug">KPI</span>
+    <h2>The stat card</h2>
+    <p class="frame">The single most-repeated object in an analytics SaaS. Real metrics from your dataset shown below —
+      <code>time_to_fill</code>, <code>open_reqs</code>, offer-accept. Three densities; pick the default.</p>
+
+    <div class="kpis">
+      <div class="kcard">
+        <div class="klabel"><span>Time to fill</span><span class="kvariant">A · minimal</span></div>
+        <div class="kval">61.9<span class="kunit">days</span></div>
+        <div><span class="kdelta up">▲ 4.2 vs last quarter</span></div>
+      </div>
+      <div class="kcard">
+        <div class="klabel"><span>Time to fill</span><span class="kvariant">B · + sparkline</span></div>
+        <div class="kval">61.9<span class="kunit">days</span></div>
+        <div><span class="kdelta up">▲ 4.2 &nbsp;·&nbsp; 7.3%</span></div>
+        <svg viewBox="0 0 180 34" width="100%" height="34" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="2,24 24,22 46,25 68,18 90,20 112,14 134,17 156,9 178,11" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="178" cy="11" r="3" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <div class="kcard">
+        <div class="klabel"><span>Time to fill</span><span class="kvariant">C · full context</span></div>
+        <div class="kval">61.9<span class="kunit">days</span></div>
+        <div><span class="kdelta up">▲ 4.2 &nbsp;·&nbsp; 7.3%</span></div>
+        <svg viewBox="0 0 180 30" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="2,22 24,20 46,23 68,15 90,18 112,12 134,15 156,7 178,9" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="178" cy="9" r="3" fill="var(--accent)"/>
+        </svg>
+        <div class="kctx">Median 54 · target 45 · grounded in 47 filled reqs</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kcard">
+        <div class="klabel"><span>Open requisitions</span><span class="kvariant">B</span></div>
+        <div class="kval">18</div>
+        <div><span class="kdelta flat">▬ no change</span></div>
+        <svg viewBox="0 0 180 34" width="100%" height="34" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="2,16 24,15 46,17 68,16 90,18 112,15 134,16 156,17 178,16" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="178" cy="16" r="3" fill="var(--faint)"/>
+        </svg>
+      </div>
+      <div class="kcard">
+        <div class="klabel"><span>Offer accept rate</span><span class="kvariant">B</span></div>
+        <div class="kval">82<span class="kunit">%</span></div>
+        <div><span class="kdelta down">▼ 3 pts &nbsp;·&nbsp; improving</span></div>
+        <svg viewBox="0 0 180 34" width="100%" height="34" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="2,10 24,12 46,9 68,14 90,12 112,16 134,13 156,18 178,15" fill="none" stroke="var(--pick)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="178" cy="15" r="3" fill="var(--pick)"/>
+        </svg>
+      </div>
+      <div class="kcard">
+        <div class="klabel"><span>Headcount</span><span class="kvariant">A</span></div>
+        <div class="kval">1,184</div>
+        <div><span class="kdelta down">▲ 26 hires this quarter</span></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Recommendation — B as the default</b>, C for the top row of the Dashboard view, A only where space is tight (inline
+      in a chat answer). Rules that hold across all three: label in mono uppercase; value is the biggest thing; delta color
+      is <em>semantic and context-aware</em> — rising time-to-fill is bad (amber), rising accept-rate is good (green), so the
+      arrow direction and the color are set independently. Sparkline gets a faint endpoint dot, no axis, no grid.
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- CHARTS -->
+  <section id="charts">
+    <span class="slug">CHARTS</span>
+    <h2>Charting library</h2>
+    <p class="frame">You already depend on <code>recharts</code>, and the eval/answer payload is already "chart-ready".
+      This is mostly about confirming, not switching.</p>
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Recharts + shadcn <code>Chart</code> wrapper <span class="badge-rec">Recommended</span></h3>
+          <p class="what">shadcn's <code>ChartContainer</code> / <code>ChartTooltip</code> theming layer over Recharts. Tremor's charts
+            (also Recharts) for spark + bar-list + funnel.</p>
+          <div class="pc">
+            <ul class="pro"><li>Already installed — <b>no new dep</b></li><li>Themed by your CSS vars automatically</li><li>Covers area/bar/line/pie/radar + the KPI card</li><li>SSR-friendly, ~100kb, fine for this data scale</li></ul>
+            <ul class="con"><li>Not built for 100k-point series (irrelevant here — you aggregate server-side)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>Tremor charts as the primary</h3>
+          <p class="what">Lead with Tremor's chart components directly rather than raw Recharts.</p>
+          <div class="pc">
+            <ul class="pro"><li>Least code — prestyled, sensible defaults</li><li>Bar-list, tracker, funnel-ish out of the box</li></ul>
+            <ul class="con"><li>Less control when a view needs something custom</li><li>Two charting APIs if you also use shadcn charts</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>visx or ECharts</h3>
+          <p class="what">Low-level (visx/D3) or heavyweight (ECharts) for bespoke or very large visualizations.</p>
+          <div class="pc">
+            <ul class="pro"><li>visx: total control for a signature viz</li><li>ECharts: handles huge datasets, 3D, maps</li></ul>
+            <ul class="con"><li>Real engineering time / bundle weight</li><li>Overkill for aggregated hiring metrics</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- MODELS -->
+  <section id="models">
+    <span class="slug">MODELS</span>
+    <h2>Analytical views — "one bar graph won't cut it"</h2>
+    <p class="frame">Ten views, each tied to a question your executor can already answer (or a small extension of it). The
+      chat answer picks the right one from its <code>chart</code> payload; the Dashboard / Explore tabs compose them.
+      Thumbnails are drawn to scale.</p>
+
+    <div class="models">
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="2" y="6" width="46" height="7" rx="1.5" fill="var(--accent)"/>
+          <rect x="2" y="18" width="62" height="7" rx="1.5" fill="var(--accent)" opacity=".8"/>
+          <rect x="2" y="30" width="30" height="7" rx="1.5" fill="var(--accent)" opacity=".62"/>
+          <rect x="2" y="42" width="38" height="7" rx="1.5" fill="var(--accent)" opacity=".46"/>
+        </svg>
+        <div><div class="mq">Headcount by band / family</div><div class="mmeta"><b>Horizontal bars, sorted</b> · Recharts BarChart<br/>"Show me headcount by band"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <path d="M2 44 L14 40 L26 42 L38 30 L50 33 L62 20 L74 24 L74 54 L2 54 Z" fill="var(--accent)" opacity=".14"/>
+          <polyline points="2,44 14,40 26,42 38,30 50,33 62,20 74,24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="74" cy="24" r="3" fill="var(--accent)"/>
+        </svg>
+        <div><div class="mq">Hiring trend over time</div><div class="mmeta"><b>Area, emphasized endpoint</b> · Recharts AreaChart<br/>"How did hiring track through 2024?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="6" y="6" width="64" height="8" rx="1.5" fill="var(--accent)"/>
+          <rect x="13" y="18" width="50" height="8" rx="1.5" fill="var(--accent)" opacity=".78"/>
+          <rect x="20" y="30" width="36" height="8" rx="1.5" fill="var(--accent)" opacity=".56"/>
+          <rect x="28" y="42" width="20" height="8" rx="1.5" fill="var(--accent)" opacity=".4"/>
+        </svg>
+        <div><div class="mq">Recruiting funnel</div><div class="mmeta"><b>Funnel + stage conversion %</b> · Tremor / stacked bars<br/>Applied → Screen → Onsite → Offer → Hire</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="4"  y="34" width="8" height="16" fill="var(--faint)"/>
+          <rect x="15" y="24" width="8" height="26" fill="var(--faint)"/>
+          <rect x="26" y="12" width="8" height="38" fill="var(--accent)"/>
+          <rect x="37" y="20" width="8" height="30" fill="var(--faint)"/>
+          <rect x="48" y="30" width="8" height="20" fill="var(--faint)"/>
+          <rect x="59" y="40" width="8" height="10" fill="var(--faint)"/>
+          <line x1="30" y1="4" x2="30" y2="52" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2"/>
+        </svg>
+        <div><div class="mq">Time-to-fill distribution</div><div class="mmeta"><b>Histogram + median line</b> · Recharts BarChart<br/>"Is 62 days typical, or dragged up by outliers?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <circle cx="38" cy="28" r="20" fill="none" stroke="var(--inset)" stroke-width="9"/>
+          <circle cx="38" cy="28" r="20" fill="none" stroke="var(--accent)" stroke-width="9" stroke-dasharray="70 60" transform="rotate(-90 38 28)"/>
+          <text x="38" y="31" text-anchor="middle" font-size="11" font-family="monospace" fill="var(--ink)">1.1k</text>
+        </svg>
+        <div><div class="mq">Headcount composition</div><div class="mmeta"><b>Donut, total in center</b> · Recharts PieChart<br/>"What share of the org is each job family?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="4"  y="8"  width="10" height="9" fill="var(--accent)" opacity=".25"/><rect x="15" y="8"  width="10" height="9" fill="var(--accent)" opacity=".55"/><rect x="26" y="8"  width="10" height="9" fill="var(--accent)" opacity=".85"/><rect x="37" y="8" width="10" height="9" fill="var(--accent)"/><rect x="48" y="8" width="10" height="9" fill="var(--accent)" opacity=".7"/><rect x="59" y="8" width="10" height="9" fill="var(--accent)" opacity=".4"/>
+          <rect x="4"  y="19" width="10" height="9" fill="var(--accent)" opacity=".2"/><rect x="15" y="19" width="10" height="9" fill="var(--accent)" opacity=".4"/><rect x="26" y="19" width="10" height="9" fill="var(--accent)" opacity=".7"/><rect x="37" y="19" width="10" height="9" fill="var(--accent)" opacity=".9"/><rect x="48" y="19" width="10" height="9" fill="var(--accent)" opacity=".5"/><rect x="59" y="19" width="10" height="9" fill="var(--accent)" opacity=".3"/>
+          <rect x="4"  y="30" width="10" height="9" fill="var(--accent)" opacity=".15"/><rect x="15" y="30" width="10" height="9" fill="var(--accent)" opacity=".3"/><rect x="26" y="30" width="10" height="9" fill="var(--accent)" opacity=".5"/><rect x="37" y="30" width="10" height="9" fill="var(--accent)" opacity=".65"/><rect x="48" y="30" width="10" height="9" fill="var(--accent)" opacity=".4"/><rect x="59" y="30" width="10" height="9" fill="var(--accent)" opacity=".2"/>
+        </svg>
+        <div><div class="mq">Hire cohort retention</div><div class="mmeta"><b>Heatmap table</b> · HTML + color scale<br/>"Do the people we hired in Q1 stay?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="2" y="8"  width="40" height="7" rx="1.5" fill="var(--pick)"/>
+          <rect x="2" y="19" width="58" height="7" rx="1.5" fill="var(--flag)"/>
+          <rect x="2" y="30" width="24" height="7" rx="1.5" fill="var(--pick)"/>
+          <rect x="2" y="41" width="66" height="7" rx="1.5" fill="var(--flag)"/>
+        </svg>
+        <div><div class="mq">Requisition aging</div><div class="mmeta"><b>Bars, threshold coloring</b> · Recharts + cell color<br/>"Which open reqs are past 60 days?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <line x1="6" y1="4" x2="6" y2="52" stroke="var(--line-strong)" stroke-width="1"/>
+          <rect x="7" y="10" width="52" height="6" fill="var(--inset)"/><rect x="7" y="10" width="40" height="6" fill="var(--accent)"/><line x1="45" y1="6" x2="45" y2="20" stroke="var(--ink)" stroke-width="1.5"/>
+          <rect x="7" y="26" width="52" height="6" fill="var(--inset)"/><rect x="7" y="26" width="30" height="6" fill="var(--accent)"/><line x1="45" y1="22" x2="45" y2="36" stroke="var(--ink)" stroke-width="1.5"/>
+          <rect x="7" y="42" width="52" height="6" fill="var(--inset)"/><rect x="7" y="42" width="48" height="6" fill="var(--accent)"/><line x1="45" y1="38" x2="45" y2="52" stroke="var(--ink)" stroke-width="1.5"/>
+        </svg>
+        <div><div class="mq">Offer accept rate vs target</div><div class="mmeta"><b>Bullet chart</b> · Tremor Tracker / custom<br/>"Are we hitting 85% on offers, by family?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <g stroke="var(--faint)" stroke-width="6">
+            <line x1="8"  y1="50" x2="8"  y2="30"/><line x1="20" y1="50" x2="20" y2="20"/><line x1="32" y1="50" x2="32" y2="36"/><line x1="44" y1="50" x2="44" y2="12"/><line x1="56" y1="50" x2="56" y2="28"/><line x1="68" y1="50" x2="68" y2="40"/>
+          </g>
+          <polyline points="8,22 20,16 32,26 44,8 56,20 68,30" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        </svg>
+        <div><div class="mq">Source effectiveness</div><div class="mmeta"><b>Bar + conversion overlay</b> · Recharts ComposedChart<br/>"Which channels actually convert to hires?"</div></div>
+      </div>
+
+      <div class="model">
+        <svg viewBox="0 0 76 56" aria-hidden="true">
+          <rect x="6" y="8" width="64" height="40" rx="4" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+          <text x="38" y="30" text-anchor="middle" font-size="17" font-family="monospace" font-weight="600" fill="var(--accent)">43</text>
+          <text x="38" y="41" text-anchor="middle" font-size="7" font-family="monospace" fill="var(--muted)">active · Engineering</text>
+        </svg>
+        <div><div class="mq">Scalar answer + citation</div><div class="mmeta"><b>Big-number tile</b> · shadcn Card<br/>"How many active people in Engineering?" — with record ids</div></div>
+      </div>
+    </div>
+
+    <div class="callout"><b>Build order inside MODELS:</b> the first five ship in Phase 3 (they reuse metrics you already
+      compute). Cohort, bullet, aging-threshold and source overlay are Phase 3.5 — each needs one new executor aggregation.
+      The scalar tile already exists; it just gets the new type treatment.</div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- HOME -->
+  <section id="home">
+    <span class="slug">HOME</span>
+    <h2>Landing page</h2>
+    <p class="frame">Current <code>/</code> is a plain text list of features. 67% of top SaaS sites now lead with a real
+      product screenshot in the hero and a single CTA. Three formats:</p>
+
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Product-forward hero + bento <span class="badge-rec">Recommended</span></h3>
+          <p class="what">Hero = one confident headline, one sub-line, one CTA ("Create a workspace"), and a real screenshot
+            of the app answering <em>"How many people are active in Engineering?"</em> with the grounded answer + chart visible.
+            Below: a 4-tile bento of the differentiators, then a 3-step "how it works", then a closing CTA band.</p>
+          <div class="pc">
+            <ul class="pro"><li>Shows the product in 2 seconds — the answer <em>is</em> the pitch</li><li>Bento tiles carry: <b>Ask don't build · Grounded · Role-scoped · IR boundary</b></li><li>Single CTA converts better than a menu of them</li></ul>
+            <ul class="con"><li>Needs one polished screenshot (or a static mock of the answer card)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>Minimal dev-tool</h3>
+          <p class="what">Headline + sub + CTA, then an animated "terminal" that types a question and reveals the JSON IR
+            then the answer. Very Linear/Vercel.</p>
+          <div class="pc">
+            <ul class="pro"><li>Signals "for people who think in queries"</li><li>The IR reveal is genuinely the interesting bit</li></ul>
+            <ul class="con"><li>Less legible to a CHRO buyer than a real answer card</li><li>More build (the typing sequence)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>Keep current, just styled</h3>
+          <p class="what">Same content, given the new theme/type and a proper hero block.</p>
+          <div class="pc">
+            <ul class="pro"><li>Fastest</li><li>Enough if the home page isn't a priority yet</li></ul>
+            <ul class="con"><li>Still text-only — no product shown</li><li>Doesn't feel like a 2026 SaaS</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wire" aria-label="Home page wireframe, option A">
+      <div class="canvas">
+        <div class="wbox solid">nav · wordmark · [ Log in ] [ Create workspace ]</div>
+        <div class="wrow" style="grid-template-columns:1.1fr 1fr;">
+          <div class="wbox" style="min-height:120px;">H1 "Ask your hiring data."<br/>sub · one line<br/>[ Create a workspace ] &nbsp; secondary: See an example</div>
+          <div class="wbox accent" style="min-height:120px;">screenshot — answer card:<br/>"43 active · Engineering" + bar chart + grounded-in line</div>
+        </div>
+        <div class="wbox">trust row · "Synthetic data · read-only · no HR-system integration"</div>
+        <div class="wrow" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <div class="wbox">Ask, don't build</div><div class="wbox">Grounded answers</div><div class="wbox">Scoped by role</div><div class="wbox">Model proposes, code decides</div>
+        </div>
+        <div class="wrow" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="wbox">1 · Ask in English</div><div class="wbox">2 · Model emits a validated query</div><div class="wbox">3 · Executor returns a grounded answer</div>
+        </div>
+        <div class="wbox accent">closing CTA band · [ Create a workspace ]</div>
+      </div>
+      <p class="wnote">Bento tile copy is lifted straight from your current <code>/</code> — same four points, made scannable.</p>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- LOGIN -->
+  <section id="login">
+    <span class="slug">LOGIN</span>
+    <h2>Login &amp; signup</h2>
+    <p class="frame">Both patterns are current in 2026. For a product with a strong "what you get" story (instant seeded
+      dataset, 5 roles), the split screen earns its space.</p>
+
+    <div class="opts">
+      <div class="opt pick">
+        <div class="tag">A</div>
+        <div>
+          <h3>Split screen — form left, value panel right <span class="badge-rec">Recommended</span></h3>
+          <p class="what">Left: the form only (email, password, submit, switch-to-signup). Right: a fixed panel — one line of
+            positioning, three value bullets, the five roles as chips, and on <em>signup</em> the line
+            "We'll generate a demo hiring dataset for <code>{org}</code> the moment you land."</p>
+          <div class="pc">
+            <ul class="pro"><li>Reassures during the highest-friction moment</li><li>Right panel explains the seeded-data magic before they see it</li><li>Role chips preview the RBAC story</li></ul>
+            <ul class="con"><li>Right panel hidden on mobile (form-only there — fine)</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">B</div>
+        <div>
+          <h3>Centered card, minimal</h3>
+          <p class="what">Single centered card, wordmark above, form, one helper link. Nothing else.</p>
+          <div class="pc">
+            <ul class="pro"><li>Zero distraction, fastest to build</li><li>Feels crisp and confident</li></ul>
+            <ul class="con"><li>Wastes the signup moment — no story told</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="tag">C</div>
+        <div>
+          <h3>Centered card + one testimonial / stat</h3>
+          <p class="what">B, plus a single quote or metric under the card.</p>
+          <div class="pc">
+            <ul class="pro"><li>A little warmth without a full panel</li></ul>
+            <ul class="con"><li>You don't have real testimonials yet — would be filler</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wire" aria-label="Login wireframe, option A">
+      <div class="canvas">
+        <div class="wrow" style="grid-template-columns:1fr 1fr;">
+          <div class="wbox" style="min-height:150px;">wordmark<br/><br/>H2 "Sign in"<br/>email<br/>password<br/>[ Sign in ]<br/>· New here? Create a workspace</div>
+          <div class="wbox accent" style="min-height:150px;">"Grounded answers over your hiring data."<br/>+ role-scoped · + cites every record · + read-only<br/><br/>chips: OWNER · ADMIN · CHRO · RECRUITER · VIEWER<br/><br/>signup only: "Demo dataset generated on arrival."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- SHELL -->
+  <section id="shell">
+    <span class="slug">SHELL</span>
+    <h2>In-app layout</h2>
+    <p class="frame">The sidebar you just built stays. What's missing is a top bar and a way to reach the analytical views
+      without leaving chat.</p>
+    <div class="wire" aria-label="App shell wireframe">
+      <div class="canvas">
+        <div class="wrow" style="grid-template-columns:210px 1fr;">
+          <div class="wbox" style="min-height:150px;">SIDEBAR (built)<br/>+ New chat<br/>· history<br/>· Members<br/>· Settings<br/>· org / role menu</div>
+          <div class="wrow">
+            <div class="wbox solid">TOP BAR · breadcrumb &nbsp;·&nbsp; [ time range ▾ ] &nbsp;·&nbsp; role badge &nbsp;·&nbsp; theme toggle</div>
+            <div class="wbox accent">TABS · &nbsp;Ask&nbsp; | &nbsp;Dashboard&nbsp; | &nbsp;Explore</div>
+            <div class="wbox" style="min-height:96px;">CONTENT<br/>· Ask → composer + transcript (built)<br/>· Dashboard → KPI row (C) + 4–6 MODELS views<br/>· Explore → pick a dimension, get the matching view + data table</div>
+          </div>
+        </div>
+      </div>
+      <p class="wnote">"Dashboard" is a fixed curated set. "Explore" is the open-ended one — choose metric + breakdown,
+        it renders the right MODELS view and the underlying rows. Both reuse the executor; neither needs new API surface
+        beyond the aggregations noted in MODELS.</p>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- PLAN -->
+  <section id="plan">
+    <span class="slug">PLAN</span>
+    <h2>Suggested build order</h2>
+    <div class="plan">
+      <div class="phase"><span class="pn"></span><div><h4>Tokens — theme, type, icons</h4><p>Commit the accent + dark-first decision into <code>globals.css</code>. Add Geist Mono, wire <code>tabular-nums</code> into a <code>&lt;Metric&gt;</code> primitive. Pull the handful of Tabler glyphs. No layout change — everything just looks decided.</p></div></div>
+      <div class="phase"><span class="pn"></span><div><h4>Primitives — KPI card + Chart wrapper</h4><p>Build <code>&lt;StatCard&gt;</code> (variants A/B/C) and adopt the shadcn <code>Chart</code> wrapper + Tremor spark/bar-list. Replace the current inline answer chart with the themed version.</p></div></div>
+      <div class="phase"><span class="pn"></span><div><h4>Dashboard tab + first 5 MODELS views</h4><p>Top bar + tab strip. Dashboard = KPI row (C) + headcount-by-band, trend, funnel, time-to-fill dist, composition. All from existing metrics.</p></div></div>
+      <div class="phase"><span class="pn"></span><div><h4>Explore tab + remaining MODELS</h4><p>Dimension picker → matching view + data table. Add cohort, bullet, aging-threshold, source overlay (one new executor aggregation each).</p></div></div>
+      <div class="phase"><span class="pn"></span><div><h4>Home + login</h4><p>Rebuild <code>/</code> as option A and <code>/login</code> + <code>/signup</code> as split screen. Reuses every primitive from P1–P2.</p></div></div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- QUESTIONS -->
+  <section id="questions">
+    <span class="slug">DECIDE</span>
+    <h2>What I need from you</h2>
+    <p class="frame">Answer these and I'll start at Phase 1. Anything you don't call, I take my recommendation.</p>
+    <div class="qs">
+      <div class="q"><div class="qh">1 · Accent hue?</div><div class="qo"><b>indigo</b> / blue / violet / teal — or "keep neutral, no accent"</div></div>
+      <div class="q"><div class="qh">2 · Dark-first or light-first?</div><div class="qo"><b>dark-first</b> (heads-down analytics) / light-first (friendlier for the home page)</div></div>
+      <div class="q"><div class="qh">3 · Full "Dashboard + Explore" tabs, or keep it chat-only with charts inline for now?</div><div class="qo"><b>build the tabs</b> / chat-only, revisit later</div></div>
+      <div class="q"><div class="qh">4 · Home + login this round, or app-only and marketing later?</div><div class="qo">both now / <b>app first, home + login last (Phase 5)</b></div></div>
+      <div class="q"><div class="qh">5 · Add Tremor, or stay pure shadcn and hand-build the funnel/cohort?</div><div class="qo"><b>add Tremor</b> / pure shadcn</div></div>
+      <div class="q"><div class="qh">6 · KPI default density?</div><div class="qo">A minimal / <b>B sparkline</b> / C full-context</div></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>Sources</b> — pkgpulse (icons, charts) · adminlte.io (shadcn templates, Tremor) · tremor.so · ui.shadcn.com/blocks ·
+    tweakcn.com · madegooddesigns (dashboard type) · saasui.design + saasframe.io (dashboard / landing / login patterns) ·
+    aihr.com + netsuite (recruiting metrics). &nbsp; Reply with picks keyed like <b>ICONS: A · THEME: A (indigo) · KPI: B</b>.
+  </div>
+
+</div>
