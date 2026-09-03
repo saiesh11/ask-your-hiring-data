@@ -19,12 +19,15 @@ export type Turn =
 
 export interface Conversation {
   id: string;
+  /** The demo principal this chat belongs to — chats never cross accounts. */
+  userId: string;
   title: string;
   turns: Turn[];
   updatedAt: number;
 }
 
 interface ChatStore {
+  /** Only the active principal's conversations. */
   conversations: Conversation[];
   activeId: string | null;
   activeTurns: Turn[];
@@ -44,23 +47,36 @@ const DEFAULT_USER = "chro";
 const Ctx = createContext<ChatStore | null>(null);
 
 export function ChatStoreProvider({ children }: { children: ReactNode }) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  // The full store across every principal; the context only ever exposes the
+  // active one's slice.
+  const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveIdState] = useState<string | null>(null);
-  const [activeUserId, setActiveUserId] = useState<string>(DEFAULT_USER);
+  const [activeUserId, setActiveUserIdState] = useState<string>(DEFAULT_USER);
   const [hydrated, setHydrated] = useState(false);
 
-  // The source of truth for "which conversation appends target". A ref, not
-  // state, so an in-flight ask() that captured an older render still writes the
-  // model's answer to the conversation its question created.
+  // Refs so an in-flight ask() that captured an older render still writes the
+  // model's answer to the right conversation, owned by the right principal.
   const activeIdRef = useRef<string | null>(null);
+  const activeUserIdRef = useRef<string>(DEFAULT_USER);
+
   const setActiveId = useCallback((id: string | null) => {
     activeIdRef.current = id;
     setActiveIdState(id);
   }, []);
 
+  const setActiveUserId = useCallback(
+    (id: string) => {
+      if (id === activeUserIdRef.current) return;
+      activeUserIdRef.current = id;
+      setActiveUserIdState(id);
+      // Switching accounts lands on a fresh empty state; the previous
+      // account's chats stay in storage, hidden until you switch back.
+      setActiveId(null);
+    },
+    [setActiveId],
+  );
+
   useEffect(() => {
-    // Mount-time hydration from localStorage: server and first client render
-    // both start empty (no mismatch), then this pulls in persisted chats.
     /* eslint-disable react-hooks/set-state-in-effect */
     try {
       const raw = localStorage.getItem(KEY);
@@ -70,9 +86,15 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
           activeId?: string | null;
           activeUserId?: string;
         };
-        setConversations(parsed.conversations ?? []);
+        // migrate pre-partition chats onto the default principal
+        setAllConversations(
+          (parsed.conversations ?? []).map((c) => ({ ...c, userId: c.userId ?? DEFAULT_USER })),
+        );
         setActiveId(parsed.activeId ?? null);
-        if (parsed.activeUserId) setActiveUserId(parsed.activeUserId);
+        if (parsed.activeUserId) {
+          activeUserIdRef.current = parsed.activeUserId;
+          setActiveUserIdState(parsed.activeUserId);
+        }
       }
     } catch {
       /* fresh start */
@@ -84,17 +106,20 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(KEY, JSON.stringify({ conversations, activeId, activeUserId }));
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ conversations: allConversations, activeId, activeUserId }),
+      );
     } catch {
       /* storage unavailable */
     }
-  }, [conversations, activeId, activeUserId, hydrated]);
+  }, [allConversations, activeId, activeUserId, hydrated]);
 
   const newConversation = useCallback(() => setActiveId(null), [setActiveId]);
   const selectConversation = useCallback((id: string) => setActiveId(id), [setActiveId]);
   const deleteConversation = useCallback(
     (id: string) => {
-      setConversations((cs) => cs.filter((c) => c.id !== id));
+      setAllConversations((cs) => cs.filter((c) => c.id !== id));
       if (activeIdRef.current === id) setActiveId(null);
     },
     [setActiveId],
@@ -102,7 +127,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
   const renameConversation = useCallback((id: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
-    setConversations((cs) =>
+    setAllConversations((cs) =>
       cs.map((c) => (c.id === id ? { ...c, title: trimmed.slice(0, 80) } : c)),
     );
   }, []);
@@ -111,7 +136,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
     (turn: Turn) => {
       const target = activeIdRef.current;
       if (target) {
-        setConversations((cs) =>
+        setAllConversations((cs) =>
           cs.map((c) =>
             c.id === target ? { ...c, turns: [...c.turns, turn], updatedAt: Date.now() } : c,
           ),
@@ -122,15 +147,23 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
       activeIdRef.current = id; // synchronous, so the next append in this ask() lands here
       setActiveId(id);
       const title = turn.role === "user" ? turn.text.slice(0, 60) || NEW_TITLE : NEW_TITLE;
-      setConversations((cs) => [{ id, title, turns: [turn], updatedAt: Date.now() }, ...cs]);
+      setAllConversations((cs) => [
+        { id, userId: activeUserIdRef.current, title, turns: [turn], updatedAt: Date.now() },
+        ...cs,
+      ]);
     },
     [setActiveId],
   );
 
-  const activeTurns = useMemo(
-    () => conversations.find((c) => c.id === activeId)?.turns ?? [],
-    [conversations, activeId],
+  const conversations = useMemo(
+    () => allConversations.filter((c) => c.userId === activeUserId),
+    [allConversations, activeUserId],
   );
+
+  const activeTurns = useMemo(() => {
+    const c = allConversations.find((x) => x.id === activeId);
+    return c && c.userId === activeUserId ? c.turns : [];
+  }, [allConversations, activeId, activeUserId]);
 
   const value = useMemo<ChatStore>(
     () => ({
@@ -150,6 +183,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
       activeId,
       activeTurns,
       activeUserId,
+      setActiveUserId,
       newConversation,
       selectConversation,
       deleteConversation,

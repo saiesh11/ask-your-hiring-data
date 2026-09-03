@@ -180,13 +180,7 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="font-normal">View the data as</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {users.map((u) => (
-                  <DropdownMenuItem
-                    key={u.id}
-                    onClick={() => {
-                      setActiveUserId(u.id);
-                      newConversation();
-                    }}
-                  >
+                  <DropdownMenuItem key={u.id} onClick={() => setActiveUserId(u.id)}>
                     <div className="grid leading-tight">
                       <span className="font-medium">{u.displayName}</span>
                       <span className="text-xs text-muted-foreground">{u.scope}</span>
