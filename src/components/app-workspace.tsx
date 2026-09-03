@@ -1,27 +1,54 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CollapseIcon, HomeIcon } from "@/components/icons";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar, type SidebarViewer } from "./app-sidebar";
 import { ChatStoreProvider, useChatStore } from "./chat-store";
 
-/** A pull-tab pinned to the sidebar's edge, vertically centred, that toggles it. */
+/**
+ * Pull-tab on the sidebar's edge that toggles it. Positioned with inline
+ * styles on purpose — it must not depend on any utility class the dev
+ * bundler might fail to emit, which is how it kept drifting to the top.
+ */
 function SidebarEdgeTab() {
   const { toggleSidebar, state, isMobile } = useSidebar();
+  const [hover, setHover] = useState(false);
   const open = state === "expanded" && !isMobile;
   return (
     <button
       type="button"
       onClick={toggleSidebar}
+      onPointerEnter={() => setHover(true)}
+      onPointerLeave={() => setHover(false)}
       aria-label={open ? "Close sidebar" : "Open sidebar"}
-      style={{ left: open ? "var(--sidebar-width)" : 0 }}
-      className="fixed top-1/2 z-50 flex h-24 w-5 -translate-x-px -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground shadow-md transition-[left,width,background-color,color] hover:w-6 hover:bg-sidebar-accent hover:text-foreground"
+      style={{
+        position: "fixed",
+        top: "50%",
+        left: open ? "var(--sidebar-width)" : "0px",
+        transform: "translate(-1px, -50%)",
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "96px",
+        width: hover ? "24px" : "20px",
+        background: hover ? "var(--sidebar-accent)" : "var(--sidebar)",
+        color: hover ? "var(--sidebar-accent-foreground)" : "var(--muted-foreground)",
+        border: "1px solid var(--sidebar-border)",
+        borderLeft: "none",
+        borderRadius: "0 10px 10px 0",
+        boxShadow: "0 4px 14px -4px rgb(0 0 0 / 0.35)",
+        transition: "left 200ms ease, width 150ms ease, background-color 150ms ease",
+      }}
     >
-      <CollapseIcon className={cn("size-4 transition-transform", !open && "rotate-180")} />
+      <CollapseIcon
+        width={16}
+        height={16}
+        style={{ transform: open ? "none" : "rotate(180deg)", transition: "transform 200ms ease" }}
+      />
     </button>
   );
 }
