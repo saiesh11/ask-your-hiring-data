@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { BackIcon } from "@/components/icons";
+import { BackIcon, SparkIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,12 @@ const FIELDS = [
   ["email", "Work email", "email"],
   ["password", "Password", "password"],
 ] as const;
+
+const VALUE = [
+  "Cites the exact records and fields behind every answer",
+  "Role-scoped server-side — a recruiter sees only their families",
+  "Read-only. The model proposes a query; code decides",
+];
 
 export default function SignupPage() {
   const [form, setForm] = useState({ name: "", orgName: "", email: "", password: "" });
@@ -53,15 +59,31 @@ export default function SignupPage() {
     window.location.href = "/app";
   }
 
+  const field = ([key, label, type]: (typeof FIELDS)[number]) => (
+    <div key={key} className="grid gap-2.5">
+      <Label htmlFor={key}>{label}</Label>
+      <Input
+        id={key}
+        type={type}
+        required
+        minLength={type === "password" ? 8 : undefined}
+        placeholder={key === "password" ? "8+ characters" : undefined}
+        className="h-11"
+        value={form[key]}
+        onChange={set(key)}
+      />
+    </div>
+  );
+
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden">
       {/* ambient wash so the frosted panel has something to catch */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -left-32 size-[480px] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -right-32 -bottom-32 size-[480px] rounded-full bg-primary/[0.06] blur-3xl" />
+        <div className="absolute -top-40 -left-40 size-[560px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -right-40 -bottom-40 size-[520px] rounded-full bg-primary/[0.06] blur-3xl" />
       </div>
 
-      <header className="relative z-10 p-6">
+      <header className="relative z-10 shrink-0 p-6">
         <Button
           asChild
           variant="ghost"
@@ -75,42 +97,51 @@ export default function SignupPage() {
         </Button>
       </header>
 
-      <div className="relative z-10 flex flex-1 items-center justify-center px-6 pb-16">
-        <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.055] p-10 shadow-2xl backdrop-blur-2xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance">
-            Create your workspace
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            A synthetic hiring dataset is generated the moment you land.
+      <div className="relative z-10 grid flex-1 lg:grid-cols-[1fr_1.6fr]">
+        {/* LEFT — slim, plain text */}
+        <aside className="hidden flex-col justify-center gap-7 border-r border-white/10 px-10 lg:flex">
+          <span className="grid size-10 place-items-center rounded-xl border bg-card text-primary">
+            <SparkIcon className="size-5" />
+          </span>
+          <p className="max-w-xs text-lg font-medium text-balance">
+            Grounded, role-scoped answers over your hiring data.
           </p>
-
-          <form onSubmit={onSubmit} className="mt-9 grid gap-6">
-            {FIELDS.map(([key, label, type]) => (
-              <div key={key} className="grid gap-2.5">
-                <Label htmlFor={key}>{label}</Label>
-                <Input
-                  id={key}
-                  type={type}
-                  required
-                  minLength={type === "password" ? 8 : undefined}
-                  placeholder={key === "password" ? "8+ characters" : undefined}
-                  value={form[key]}
-                  onChange={set(key)}
-                />
-              </div>
+          <ul className="flex max-w-xs flex-col gap-3 text-sm text-muted-foreground">
+            {VALUE.map((v) => (
+              <li key={v} className="flex gap-2.5">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                {v}
+              </li>
             ))}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={pending} className="mt-2 w-full">
-              {pending ? "Creating…" : "Create workspace"}
-            </Button>
-          </form>
+          </ul>
+        </aside>
 
-          <p className="mt-7 text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-              Sign in
-            </Link>
-          </p>
+        {/* RIGHT — the form, roomy frosted panel */}
+        <div className="flex items-center justify-center p-6 sm:p-8">
+          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-white/[0.055] p-8 shadow-2xl backdrop-blur-2xl sm:p-12">
+            <h1 className="text-3xl font-semibold tracking-tight text-balance">
+              Create your workspace
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              A synthetic hiring dataset is generated the moment you land.
+            </p>
+
+            <form onSubmit={onSubmit} className="mt-9 grid gap-6">
+              <div className="grid gap-6 sm:grid-cols-2">{FIELDS.slice(0, 2).map(field)}</div>
+              {FIELDS.slice(2).map(field)}
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" size="lg" disabled={pending} className="mt-1 w-full">
+                {pending ? "Creating…" : "Create workspace"}
+              </Button>
+            </form>
+
+            <p className="mt-7 text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary underline-offset-4 hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>
