@@ -26,24 +26,30 @@ answer.
   redesigned UI. Needs a Postgres database to run the app; `pnpm test` and `pnpm eval` still run
   offline.
 
-## How it works
+## Architecture
 
-```
-question ─▶ LLMProvider ─▶ raw JSON ─▶ LlmProposalSchema.safeParse
-                                              │  (fail ⇒ refusal)
-                                              ▼
-                                   Query IR  { metric, filters, groupBy }
-                                              │
-                              resolveScope(ctx, ir.jobFamily)   ◀── the security boundary
-                                              │  org-wide caller: unconstrained
-                                              │  scoped caller:   confined to their families,
-                                              │                   silently, never rejected
-                                              ▼
-                                   execute(ir, ctx, orgData)  ── deterministic
-                                              │
-                     ┌────────────────────────┼────────────────────────┐
-                  scalar                   grouped              no matching rows
-              value + citations      buckets + citations       explicit refusal
+```mermaid
+flowchart TD
+    UI["Chat workspace<br/>Next.js App Router · React 19"]
+    Auth["NextAuth v5<br/>credentials · JWT session"]
+    Ctx["requireContext()<br/>session → org + membership + scope"]
+    Route["POST /api/ask<br/>guardOrgRoute · typed REST · Zod I/O"]
+    Pipeline["runAskPipeline<br/>src/lib/api"]
+    Provider["LLMProvider<br/>Mock | OpenAI · factory"]
+    Registry["prompt-registry<br/>propose-query-ir@v1"]
+    Schema["LlmProposalSchema.safeParse<br/>src/lib/query-ir"]
+    Scope["resolveScope ctx, ir.jobFamily<br/>the security boundary"]
+    Executor["execute ir, ctx, data<br/>deterministic · no AI"]
+    DS["PrismaHiringDataSource orgId<br/>rows WHERE orgId = …"]
+    DB[("Postgres<br/>per-org rows")]
+
+    UI --> Auth --> Ctx --> Route --> Pipeline --> Provider
+    Provider -. "system prompt by id" .-> Registry
+    Provider -->|"raw JSON"| Schema
+    Schema -->|"invalid ⇒ refusal"| Pipeline
+    Schema -->|"Query IR"| Scope --> Executor --> DS --> DB
+    Executor -->|"answer + citations | no-match refusal"| Pipeline
+    Pipeline -->|"AskResponse — Zod-validated"| Route --> UI
 ```
 
 - **Query IR** (`src/lib/query-ir`) — a closed, versioned Zod contract. Fixed metric menu
@@ -69,6 +75,116 @@ question ─▶ LLMProvider ─▶ raw JSON ─▶ LlmProposalSchema.safeParse
 - **Data** — `InMemoryHiringDataSource` (a seeded deterministic generator; used by tests, the
   eval gate, and offline dev — no DB) or `PrismaHiringDataSource` (one org's rows from Postgres).
   Both validate their output against `OrgHiringDataSchema` before the executor sees it.
+
+### Request flow
+
+```mermaid
+sequenceDiagram
+    participant U as Signed-in member
+    participant API as POST /api/ask
+    participant C as requireContext()
+    participant P as runAskPipeline
+    participant M as LLMProvider
+    participant V as LlmProposalSchema
+    participant X as execute()
+
+    U->>API: { question }  (cookie session)
+    API->>C: resolve org + membership + scope
+    C-->>API: ExecutionContext (never from the body)
+    API->>P: runAskPipeline(body, { context, dataSource })
+    P->>M: proposeQueryIR(question)
+    M-->>P: raw JSON
+    P->>V: safeParse(raw)
+    alt invalid JSON / shape
+        V-->>P: fail
+        P-->>U: refused · stage = schema_validation
+    else Refusal object
+        V-->>P: { refusal, reason }
+        P-->>U: refused · stage = model_refusal
+    else valid Query IR
+        V-->>P: { metric, filters, groupBy? }
+        P->>X: execute(ir, context, orgData)
+        Note over X: resolveScope() FIRST,<br/>then compute + cite
+        alt zero matching rows
+            X-->>P: no_matching_records
+            P-->>U: refused · stage = executor
+        else
+            X-->>P: value + citations + scope
+            P-->>U: answered (chart-ready, Zod-validated)
+        end
+    end
+```
+
+### Data model
+
+```mermaid
+erDiagram
+    USER ||--o{ MEMBERSHIP : has
+    ORGANIZATION ||--o{ MEMBERSHIP : has
+    ORGANIZATION ||--o{ INVITATION : has
+    USER ||--o{ INVITATION : sent
+    ORGANIZATION ||--o{ JOB_FAMILY : owns
+    ORGANIZATION ||--o{ BAND : owns
+    ORGANIZATION ||--o{ EMPLOYEE : owns
+    ORGANIZATION ||--o{ JOB : owns
+    JOB_FAMILY ||--o{ EMPLOYEE : employs
+    JOB_FAMILY ||--o{ JOB : "opens req for"
+    BAND ||--o{ EMPLOYEE : "leveled at"
+    BAND ||--o{ JOB : "leveled at"
+
+    USER {
+        string id PK
+        string email UK
+        string passwordHash
+    }
+    ORGANIZATION {
+        string id PK
+        string slug UK
+        int dataSeed "per-org generator seed"
+    }
+    MEMBERSHIP {
+        string id PK
+        string userId FK
+        string orgId FK
+        enum role "OWNER | ADMIN | CHRO | RECRUITER | VIEWER"
+        stringarray jobFamilyScope "RECRUITER / VIEWER only"
+    }
+    INVITATION {
+        string id PK
+        string orgId FK
+        string invitedById FK
+        string token UK
+        datetime acceptedAt "null until accepted"
+        datetime expiresAt
+    }
+    JOB_FAMILY {
+        string id PK
+        string orgId FK
+        string name
+    }
+    BAND {
+        string id PK
+        string orgId FK
+        int order
+    }
+    EMPLOYEE {
+        string id PK
+        string orgId FK
+        string jobFamilyId FK
+        string bandId FK
+        date hireDate
+        bool active
+    }
+    JOB {
+        string id PK
+        string orgId FK
+        string jobFamilyId FK
+        string bandId FK
+        date postedDate
+        date filledDate "null while open"
+        enum status "open | filled"
+    }
+```
 
 ## Run it without a database
 
