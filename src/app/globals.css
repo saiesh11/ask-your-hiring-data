@@ -161,4 +161,18 @@
   .rise-in {
     animation: rise-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+  /* the half-planet at the bottom rises into place, keeping its X-centering */
+  @keyframes planet-rise {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 26px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  .planet-rise {
+    animation: planet-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }

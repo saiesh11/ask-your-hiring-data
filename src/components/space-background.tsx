@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from "react";
 
+/** Planet diameter — huge, so only a shallow cap of it clears the fold. */
+const PLANET_D = "min(175vw, 2100px)";
+
 /**
  * Ambient background for the landing page: a slow drifting, faintly twinkling
  * starfield on canvas plus a large planet outline. Pauses when the tab is
@@ -87,34 +90,25 @@ export function SpaceBackground() {
     >
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-80" />
 
-      {/* planet outline, rising from the bottom */}
-      <svg
-        viewBox="0 0 100 100"
-        fill="none"
-        className="absolute -bottom-[46vh] left-1/2 h-[120vh] w-[120vh] -translate-x-1/2 opacity-[0.14]"
-      >
-        <circle cx="50" cy="50" r="48" stroke="var(--primary)" strokeWidth="0.25" />
-        <circle
-          cx="50"
-          cy="50"
-          r="41"
-          stroke="var(--primary)"
-          strokeWidth="0.12"
-          strokeDasharray="0.8 2.2"
-        />
-        <ellipse
-          cx="50"
-          cy="50"
-          rx="63"
-          ry="9"
-          stroke="var(--primary)"
-          strokeWidth="0.18"
-          transform="rotate(-18 50 50)"
-        />
-      </svg>
-
-      {/* soft horizon glow */}
-      <div className="absolute -bottom-[32vh] left-1/2 size-[64vh] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
+      {/* half-planet at the bottom edge: an opaque body that silhouettes the
+          stars, with a brand-lit limb and an atmospheric glow radiating up.
+          Only its cap shows; it rises into place on load. */}
+      <div
+        className="planet-rise absolute left-1/2 -translate-x-1/2 rounded-full"
+        style={{
+          width: PLANET_D,
+          height: PLANET_D,
+          bottom: `calc(22vh - ${PLANET_D})`,
+          animationDelay: "420ms",
+          background:
+            "linear-gradient(to top, var(--background) 52%, color-mix(in oklab, var(--primary) 13%, var(--background)) 100%)",
+          border: "1px solid color-mix(in oklab, var(--primary) 42%, transparent)",
+          boxShadow:
+            "inset 0 12px 40px -8px color-mix(in oklab, var(--primary) 55%, transparent)," +
+            "0 -16px 70px -8px color-mix(in oklab, var(--primary) 45%, transparent)," +
+            "0 -60px 160px -40px color-mix(in oklab, var(--primary) 30%, transparent)",
+        }}
+      />
     </div>
   );
 }
