@@ -144,8 +144,12 @@ erDiagram
 
 ```bash
 pnpm install
-pnpm dev            # http://localhost:3000
+pnpm dev            # http://localhost:3000  →  /  landing,  /app  the assistant
 ```
+
+The chat workspace is at **`/app`** — a collapsible sidebar (renamable history) and a
+role switcher in the footer (CHRO / two recruiters) that drives which principal each
+question runs as.
 
 No API key required — the app, tests, and eval suite run on a deterministic `MockProvider`.
 To use the real model:
