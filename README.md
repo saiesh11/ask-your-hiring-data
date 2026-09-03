@@ -15,6 +15,17 @@ answer.
 > executes anything and never sees another tenant's rows. A separate deterministic function is
 > the only code path that touches data, and role scoping is enforced there — not in the prompt.
 
+## Branches
+
+- **[`assessment-core`](../../tree/assessment-core)** — the version that matches the take-home
+  brief exactly and runs from a clean clone with just `pnpm install && pnpm dev` (no database,
+  no secrets, three demo principals via an in-UI switcher). Its own `PROCESS.md` and CI live
+  there. **Start here to evaluate the graded checklist.**
+- **`main`** (this branch) — the same IR / executor / scoping / eval core, taken further into a
+  hosted multi-tenant product: NextAuth v5, Postgres, per-org seeded datasets, RBAC, a
+  redesigned UI. Needs a Postgres database to run the app; `pnpm test` and `pnpm eval` still run
+  offline.
+
 ## How it works
 
 ```
