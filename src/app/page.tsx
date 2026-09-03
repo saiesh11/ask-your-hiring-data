@@ -1,23 +1,30 @@
 import Link from "next/link";
-import { SparkIcon } from "@/components/icons";
+import { ChatIcon, GroundedIcon, ModelIcon, ScopeIcon, SparkIcon } from "@/components/icons";
 import { Num } from "@/components/num";
 import { SpaceBackground } from "@/components/space-background";
 import { Button } from "@/components/ui/button";
 
 const BENTO = [
-  ["Ask, don't build", "Plain-English questions instead of another dashboard."],
-  [
-    "Grounded answers",
-    "Every answer cites the exact records and fields it used — or says it can't.",
-  ],
-  [
-    "Scoped by role",
-    "A recruiter sees their job families; a CHRO sees the org. Enforced server-side.",
-  ],
-  [
-    "The model proposes, code decides",
-    "The LLM only emits a schema-validated query. A deterministic executor runs it.",
-  ],
+  {
+    icon: ChatIcon,
+    term: "Ask, don't build",
+    desc: "Plain-English questions instead of another dashboard.",
+  },
+  {
+    icon: GroundedIcon,
+    term: "Grounded answers",
+    desc: "Every answer cites the exact records and fields it used — or says it can't.",
+  },
+  {
+    icon: ScopeIcon,
+    term: "Scoped by role",
+    desc: "A recruiter sees their job families; a CHRO sees the org. Enforced server-side.",
+  },
+  {
+    icon: ModelIcon,
+    term: "The model proposes, code decides",
+    desc: "The LLM only emits a schema-validated query. A deterministic executor runs it.",
+  },
 ] as const;
 
 const STEPS = [
@@ -26,14 +33,43 @@ const STEPS = [
   ["Executor returns a grounded answer", "With the records and fields it counted, and a chart."],
 ] as const;
 
+function FlowArrow() {
+  return (
+    <div className="flex items-center justify-center py-2 md:py-0" aria-hidden>
+      <svg
+        width="44"
+        height="14"
+        viewBox="0 0 44 14"
+        className="text-primary/50 max-md:rotate-90"
+        fill="none"
+      >
+        <line
+          x1="0"
+          y1="7"
+          x2="34"
+          y2="7"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="3 4"
+        />
+        <path d="M32 1.5 L42 7 L32 12.5" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <SpaceBackground />
+
       <header className="drop-in mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-        <span className="font-mono text-xs tracking-wide text-muted-foreground">
-          ask your hiring data
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-7 place-items-center rounded-lg bg-primary/15 text-primary">
+            <SparkIcon className="size-4" />
+          </span>
+          <span className="text-sm font-semibold tracking-tight">Ask Your Hiring Data</span>
+        </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Log in</Link>
@@ -94,9 +130,6 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">
-              grounded in 2 records · emp_0006, emp_0007
-            </p>
           </div>
         </section>
 
@@ -107,46 +140,43 @@ export default function LandingPage() {
           synthetic data · read-only · no integration with any real HR system
         </p>
 
-        {/* bento */}
-        <section className="grid gap-4 py-14 sm:grid-cols-2">
-          {BENTO.map(([term, desc]) => (
+        {/* four differentiators */}
+        <section className="grid gap-4 py-16 sm:grid-cols-2">
+          {BENTO.map(({ icon: Icon, term, desc }, i) => (
             <div
               key={term}
-              className="rounded-xl border border-white/10 bg-card/60 p-5 backdrop-blur-md"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/60 p-6 backdrop-blur-md transition-colors hover:border-primary/40"
             >
-              <h3 className="font-medium">{term}</h3>
+              <span className="pointer-events-none absolute top-5 right-6 font-mono text-xs text-muted-foreground/40">
+                0{i + 1}
+              </span>
+              <span className="grid size-9 place-items-center rounded-xl border border-white/10 bg-primary/10 text-primary">
+                <Icon className="size-[18px]" />
+              </span>
+              <h3 className="mt-4 font-medium">{term}</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
+              <span className="absolute bottom-0 left-0 h-px w-0 bg-primary transition-all duration-500 group-hover:w-full" />
             </div>
           ))}
         </section>
 
-        {/* how it works — an actual sequence, so numbered */}
-        <section className="border-t py-14">
+        {/* how it works — a real sequence, drawn as a flow */}
+        <section className="border-t py-16">
           <h2 className="text-lg font-semibold tracking-tight">How it works</h2>
-          <ol className="mt-6 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-stretch">
             {STEPS.map(([title, detail], i) => (
-              <li key={title}>
-                <span className="font-mono text-xs text-primary">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-1 font-medium">{title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
-              </li>
+              <div key={title} className="contents">
+                <div className="rounded-2xl border border-white/10 bg-card/60 p-5 backdrop-blur-md">
+                  <span className="inline-grid size-7 place-items-center rounded-lg bg-primary/15 font-mono text-xs text-primary">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="mt-3 font-medium">{title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+                </div>
+                {i < STEPS.length - 1 && <FlowArrow />}
+              </div>
             ))}
-          </ol>
-        </section>
-
-        {/* closing CTA */}
-        <section className="my-14 rounded-2xl border border-white/10 bg-card/60 px-6 py-10 text-center backdrop-blur-md">
-          <h2 className="text-2xl font-semibold tracking-tight text-balance">
-            Create a workspace and start asking.
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            A demo hiring dataset is generated for you on signup.
-          </p>
-          <Button asChild size="lg" className="mt-6">
-            <Link href="/signup">Create a workspace</Link>
-          </Button>
+          </div>
         </section>
       </main>
 

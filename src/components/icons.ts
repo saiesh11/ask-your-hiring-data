@@ -32,4 +32,7 @@ export {
   HomeLine as HomeIcon,
   DotsHorizontal as MoreIcon,
   Edit01 as RenameIcon,
+  CheckVerified01 as GroundedIcon,
+  Lock01 as ScopeIcon,
+  Cube01 as ModelIcon,
 } from "@untitled-ui/icons-react";
