@@ -9,6 +9,7 @@
  */
 export {
   Plus as NewChatIcon,
+  Plus as AddIcon,
   MessageChatCircle as ChatIcon,
   Stars02 as SparkIcon,
   Send01 as SendIcon,

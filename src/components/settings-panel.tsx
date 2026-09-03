@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PageShell, SectionLabel } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -32,35 +32,43 @@ export function SettingsPanel(props: { name: string; slug: string; canManage: bo
   }
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-6">
-      <h1 className="mb-4 text-lg font-semibold">Settings</h1>
-      <Card className="max-w-lg">
-        <CardHeader>
-          <CardTitle>Organization</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={save} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="org-name">Name</Label>
-              <Input
-                id="org-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={!props.canManage}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Slug</Label>
-              <Input value={props.slug} disabled readOnly />
-            </div>
-            {props.canManage && (
-              <Button type="submit" disabled={pending || name.trim() === props.name}>
-                {pending ? "Saving…" : "Save"}
-              </Button>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <PageShell title="Settings" description="Your workspace.">
+      <section className="max-w-lg overflow-hidden rounded-xl border bg-card">
+        <div className="border-b px-5 py-3.5">
+          <SectionLabel>Organization</SectionLabel>
+        </div>
+        <form onSubmit={save} className="grid gap-5 p-5">
+          <div className="grid gap-2">
+            <Label htmlFor="org-name">Name</Label>
+            <Input
+              id="org-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!props.canManage}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="org-slug">Slug</Label>
+            <Input
+              id="org-slug"
+              className="font-mono text-sm"
+              value={props.slug}
+              disabled
+              readOnly
+            />
+            <p className="text-xs text-muted-foreground">Used in URLs. Can&apos;t be changed.</p>
+          </div>
+          {props.canManage && (
+            <Button
+              type="submit"
+              className="justify-self-start"
+              disabled={pending || name.trim() === props.name}
+            >
+              {pending ? "Saving…" : "Save changes"}
+            </Button>
+          )}
+        </form>
+      </section>
+    </PageShell>
   );
 }

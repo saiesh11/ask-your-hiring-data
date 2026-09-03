@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AddIcon } from "@/components/icons";
+import { PageShell, SectionLabel } from "@/components/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,119 +77,134 @@ export function MembersPanel(props: {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Members</h1>
-        {props.canManage && <InviteDialog jobFamilies={props.jobFamilies} onInvite={call} />}
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Scope</TableHead>
-            <TableHead className="w-[1%]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {props.initialMembers.map((m) => (
-            <TableRow key={m.id}>
-              <TableCell>
-                <div className="font-medium">
-                  {m.name}
-                  {m.isSelf && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}
-                </div>
-                <div className="text-xs text-muted-foreground">{m.email}</div>
-              </TableCell>
-              <TableCell>
-                {props.canManageRoles && !m.isSelf ? (
-                  <Select
-                    value={m.role}
-                    onValueChange={(role) =>
-                      call(
-                        `/api/members/${m.id}`,
-                        { method: "PATCH", body: JSON.stringify({ role }) },
-                        "Role updated",
-                      )
-                    }
-                  >
-                    <SelectTrigger size="sm" className="w-[130px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge variant="secondary">{m.role}</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {SCOPED_ROLES.has(m.role)
-                  ? m.jobFamilyScope.map((id) => familyName.get(id) ?? id).join(", ") || "—"
-                  : "org-wide"}
-              </TableCell>
-              <TableCell>
-                {props.canRemove && !m.isSelf && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      call(`/api/members/${m.id}`, { method: "DELETE" }, "Member removed")
-                    }
-                  >
-                    Remove
-                  </Button>
-                )}
-              </TableCell>
+    <PageShell
+      title="Members"
+      description="Everyone in your workspace and what they can see."
+      action={
+        props.canManage ? (
+          <InviteDialog jobFamilies={props.jobFamilies} onInvite={call} />
+        ) : undefined
+      }
+    >
+      <div className="overflow-hidden rounded-xl border">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="font-mono text-[11px] tracking-wider uppercase">Name</TableHead>
+              <TableHead className="font-mono text-[11px] tracking-wider uppercase">Role</TableHead>
+              <TableHead className="font-mono text-[11px] tracking-wider uppercase">
+                Scope
+              </TableHead>
+              <TableHead className="w-[1%]" />
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {props.initialMembers.map((m) => (
+              <TableRow key={m.id}>
+                <TableCell>
+                  <div className="font-medium">
+                    {m.name}
+                    {m.isSelf && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{m.email}</div>
+                </TableCell>
+                <TableCell>
+                  {props.canManageRoles && !m.isSelf ? (
+                    <Select
+                      value={m.role}
+                      onValueChange={(role) =>
+                        call(
+                          `/api/members/${m.id}`,
+                          { method: "PATCH", body: JSON.stringify({ role }) },
+                          "Role updated",
+                        )
+                      }
+                    >
+                      <SelectTrigger size="sm" className="w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="secondary" className="font-mono text-[11px]">
+                      {m.role}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {SCOPED_ROLES.has(m.role)
+                    ? m.jobFamilyScope.map((id) => familyName.get(id) ?? id).join(", ") || "—"
+                    : "org-wide"}
+                </TableCell>
+                <TableCell>
+                  {props.canRemove && !m.isSelf && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() =>
+                        call(`/api/members/${m.id}`, { method: "DELETE" }, "Member removed")
+                      }
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {props.initialInvitations.length > 0 && (
         <div className="mt-8">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Pending invitations</h2>
-          <Table>
-            <TableBody>
-              {props.initialInvitations.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell>
-                    {inv.email}
-                    <Badge variant="outline" className="ml-2">
-                      {inv.role}
-                    </Badge>
-                    {inv.expired && <span className="ml-2 text-xs text-destructive">expired</span>}
-                  </TableCell>
-                  <TableCell className="w-[1%]">
-                    {props.canManage && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          call(
-                            `/api/invitations/${inv.id}`,
-                            { method: "DELETE" },
-                            "Invitation revoked",
-                          )
-                        }
-                      >
-                        Revoke
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <SectionLabel>Pending invitations</SectionLabel>
+          <div className="mt-3 overflow-hidden rounded-xl border">
+            <Table>
+              <TableBody>
+                {props.initialInvitations.map((inv) => (
+                  <TableRow key={inv.id}>
+                    <TableCell>
+                      {inv.email}
+                      <Badge variant="outline" className="ml-2 font-mono text-[11px]">
+                        {inv.role}
+                      </Badge>
+                      {inv.expired && (
+                        <span className="ml-2 text-xs text-destructive">expired</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="w-[1%]">
+                      {props.canManage && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() =>
+                            call(
+                              `/api/invitations/${inv.id}`,
+                              { method: "DELETE" },
+                              "Invitation revoked",
+                            )
+                          }
+                        >
+                          Revoke
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 
@@ -224,7 +241,10 @@ function InviteDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Invite member</Button>
+        <Button size="sm">
+          <AddIcon className="size-4" />
+          Invite member
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
