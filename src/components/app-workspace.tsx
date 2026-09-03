@@ -9,20 +9,22 @@ import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sideb
 import { AppSidebar, type SidebarViewer } from "./app-sidebar";
 import { ChatStoreProvider, useChatStore } from "./chat-store";
 
-/** A pull-tab on the sidebar's edge that collapses / expands it. */
+/** A pull-tab fixed to the sidebar's edge, vertically centred, that toggles it. */
 function SidebarEdgeTab() {
   const { toggleSidebar, state } = useSidebar();
   return (
-    <button
-      type="button"
-      onClick={toggleSidebar}
-      aria-label={state === "collapsed" ? "Open sidebar" : "Close sidebar"}
-      className="absolute top-1/2 left-0 z-20 flex h-16 w-4 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-    >
-      <CollapseIcon
-        className={cn("size-3.5 transition-transform", state === "collapsed" && "rotate-180")}
-      />
-    </button>
+    <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label={state === "collapsed" ? "Open sidebar" : "Close sidebar"}
+        className="pointer-events-auto flex h-16 w-4 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+      >
+        <CollapseIcon
+          className={cn("size-3.5 transition-transform", state === "collapsed" && "rotate-180")}
+        />
+      </button>
+    </div>
   );
 }
 
