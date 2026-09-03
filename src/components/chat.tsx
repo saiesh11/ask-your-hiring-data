@@ -148,32 +148,37 @@ export function Chat() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4">
-      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto py-6">
-        {activeTurns.map((turn, i) => (
-          <div key={i} className={turn.role === "user" ? "flex justify-end" : ""}>
-            {turn.role === "user" ? (
-              <div className="max-w-[80%] rounded-2xl bg-muted px-3.5 py-2 text-sm">
-                {turn.text}
-              </div>
-            ) : turn.role === "error" ? (
-              <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive">
-                {turn.text}
-              </div>
-            ) : (
-              <div className="rounded-xl border bg-card p-4">
-                <AnswerView response={turn.response} />
-              </div>
-            )}
-          </div>
-        ))}
-        {pending && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <SparkIcon className="size-4 animate-pulse text-primary" /> Analyzing…
-          </div>
-        )}
+    <div className="flex h-full flex-col">
+      {/* full-width scroll — the scrollbar sits at the far right of the panel */}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
+          {activeTurns.map((turn, i) => (
+            <div key={i} className={turn.role === "user" ? "flex justify-end" : ""}>
+              {turn.role === "user" ? (
+                <div className="max-w-[80%] rounded-2xl bg-muted px-3.5 py-2 text-sm">
+                  {turn.text}
+                </div>
+              ) : turn.role === "error" ? (
+                <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive">
+                  {turn.text}
+                </div>
+              ) : (
+                <div className="rounded-xl border bg-card p-4">
+                  <AnswerView response={turn.response} />
+                </div>
+              )}
+            </div>
+          ))}
+          {pending && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <SparkIcon className="size-4 animate-pulse text-primary" /> Analyzing…
+            </div>
+          )}
+        </div>
       </div>
-      <div className="shrink-0 pt-2 pb-4">{composer}</div>
+      <div className="shrink-0">
+        <div className="mx-auto max-w-3xl px-4 pt-2 pb-4">{composer}</div>
+      </div>
     </div>
   );
 }
