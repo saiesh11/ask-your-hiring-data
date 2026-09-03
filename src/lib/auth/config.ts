@@ -4,7 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/client";
 import { verifyPassword } from "./password";
 
-const CredentialsSchema = z.strictObject({
+// NOT strict: NextAuth passes csrfToken / callbackUrl alongside the fields.
+const CredentialsSchema = z.object({
   email: z.email(),
   password: z.string().min(1),
 });
