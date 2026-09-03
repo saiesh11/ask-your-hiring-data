@@ -161,8 +161,21 @@ describe("runAskPipeline — structured logging", () => {
 
     const askRecords = records.filter((r) => r.event === "ask");
     expect(askRecords).toHaveLength(2);
-    expect(askRecords[0]).toMatchObject({ userId: "u1", role: "RECRUITER", outcome: "answered" });
-    expect(askRecords[1]).toMatchObject({ userId: "u2", role: "CHRO", outcome: "refused" });
+    expect(askRecords[0]).toMatchObject({
+      userId: "u1",
+      role: "RECRUITER",
+      scope: { jobFamilies: ["Engineering"] },
+      proposal: { kind: "query_ir", metric: "open_reqs", groupBy: null },
+      outcome: "answered",
+      metric: "open_reqs",
+    });
+    expect(askRecords[1]).toMatchObject({
+      userId: "u2",
+      role: "CHRO",
+      scope: "org_wide",
+      proposal: { kind: "refusal", reason: "out_of_scope" },
+      outcome: "refused",
+    });
     for (const r of askRecords) {
       expect(typeof r.requestId).toBe("string");
       expect(typeof r.ms).toBe("number");

@@ -65,15 +65,34 @@ export async function runAskPipeline(input: unknown, deps: PipelineDeps): Promis
   const rawProposal = await provider.proposeQueryIR(question);
   const interpretation = interpretLlmProposal(rawProposal);
 
+  // What the model proposed, before any deterministic code ran — so the
+  // model→code boundary is auditable per request, not just implied.
+  const proposal =
+    interpretation.kind === "query_ir"
+      ? {
+          kind: "query_ir",
+          metric: interpretation.queryIR.metric,
+          groupBy: interpretation.queryIR.groupBy ?? null,
+        }
+      : interpretation.kind === "refusal"
+        ? { kind: "refusal", reason: interpretation.refusal.reason }
+        : { kind: "invalid", issues: interpretation.issues };
+
   const finish = (response: AskResponse): AskResponse => {
     const validated = AskResponseSchema.parse(response);
     logger.info("ask", {
       requestId,
       ...deps.logMeta,
+      scope,
+      proposal,
       outcome: validated.status,
       ...(validated.status === "refused"
         ? { stage: validated.stage, reason: validated.reason }
-        : { metric: validated.metric, recordCount: validated.citations.recordCount }),
+        : {
+            metric: validated.metric,
+            appliedFilters: validated.appliedFilters,
+            recordCount: validated.citations.recordCount,
+          }),
       ms: Date.now() - startedAt,
     });
     return validated;

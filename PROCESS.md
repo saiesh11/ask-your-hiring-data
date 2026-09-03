@@ -29,7 +29,10 @@ So this is two layers:
   dimensions, three filters. The model picks from menus; it cannot invent a field.
 - **The recruiter/viewer job-family scope is the interesting RBAC case.** Org-wide roles
   (OWNER/ADMIN/CHRO) are the easy path; the scoped roles are where the security boundary earns
-  its keep.
+  its keep. The brief's "constrained to their own job requisitions" is read as **job family**:
+  per-req ownership only maps to `open_reqs` and `avg_time_to_fill`, while `headcount` /
+  `hire_count` are about employees, so job family is the one unit that scopes every metric with
+  a single rule.
 - **"Grounded" means record-level citations.** Every answer names the row ids and fields it
   counted; a refusal names the stage and reason.
 - **Single active org per session.** A user can belong to multiple orgs (the schema supports
