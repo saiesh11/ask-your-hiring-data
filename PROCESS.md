@@ -9,12 +9,14 @@ the tests.
 The brief describes a synthetic dataset and a "Recruiter / CHRO" role model but doesn't ship a
 fixture file with this copy of the assessment, so:
 
-- **The dataset is generated, deterministically, to the described schema.** `buildOrgDataset(seed)`
-  produces job families, bands, employees (with hire dates and an `active` flag), and job
-  requisitions (posted / filled dates, `open` | `filled`). A fixed seed ⇒ identical data every
-  run, which is what makes the golden-answer evals meaningful. If Exterview intended specific
-  JSON/CSV fixtures to be used verbatim, swapping the loader is a one-file change
-  (`InMemoryHiringDataSource`).
+- **The dataset is generated once, committed as JSON, and validated on load.** `pnpm seed`
+  runs `buildDataset()` (a seeded PRNG in `src/lib/data/generate.ts`) and writes
+  `src/lib/data/fixtures/*.json` — job families, bands, employees (hire date + `active`), job
+  requisitions (posted / filled dates, `open` | `filled`), and the three demo users. At runtime
+  `src/lib/data/loader.ts` imports those JSON files and runs `DatasetSchema.safeParse` — a
+  malformed fixture is a hard startup failure. A fixed seed ⇒ identical data every run, which is
+  what makes the golden-answer evals meaningful. If Exterview intended specific fixtures to be
+  used verbatim, dropping them into `fixtures/` is the only change.
 - **Three demo principals, no auth.** `chro` (org-wide), `recruiter_eng`, `recruiter_sales`
   (each confined to one job family). Selected in the UI; the API takes `userId` in the body and
   resolves the principal server-side. Real authentication is out of scope for the brief.
@@ -68,15 +70,17 @@ satisfies at most one member. A generic `{ select, where, aggregate }` shape wou
 more "flexible" and much harder to reason about safely; a fixed metric menu means the executor's
 job is a `switch`, not an interpreter.
 
-### Role-scoping enforcement point — `resolveScope`, before anything is computed
+### Role-scoping enforcement point — `scopeFilters`, before anything is computed
 
-Scope is applied in exactly one place: `resolveScope(context, ir.jobFamily)` at the top of
-`execute()`. The caller's context (`scope: null` for org-wide, or a job-family list) is resolved
-server-side from the principal, never from the request body and never from the model. A scoped
-caller asking outside their scope is **silently confined**, never rejected — asking "headcount
-in Sales" as an Engineering recruiter returns Engineering's number with
-`scope: { jobFamilies: ["Engineering"] }` on the response. Four eval cases pin this, including
-the silent-confinement one. The prompt is never told about roles.
+Scope is applied in exactly one place: `scopeFilters(queryIR.filters, session)` at the top of
+`execute()`, before any row is touched. The `Session` (`{ role: "chro" }` or
+`{ role: "recruiter", jobFamilyName }`) comes from `resolveSession(userId)` — resolved
+server-side from the fixture, never from the request body and never from the model. CHRO:
+filters pass through. Recruiter: `filters.jobFamily` is **forced** to their own family,
+overriding whatever was asked. A scoped caller asking about another family is **silently
+confined**, not rejected — asking "headcount in Sales" as an Engineering recruiter returns
+Engineering's number, with `appliedFilters.jobFamily === "Engineering"` on the response. Four
+eval cases pin this, including the silent-confinement one. The prompt is never told about roles.
 
 ### Refusal strategy — typed by where it originated
 
@@ -92,8 +96,9 @@ distinct outcome from "the answer is 0" — the executor returns a failure so th
 The 18 cases span golden answers, scoping (recruiter principals incl. out-of-scope), and
 refusals (asserting stage + reason). Each case runs through the **exact** `runAskPipeline` the
 API route uses, then — for answered cases — the runner independently recomputes the value by
-calling `execute()` directly with the case's filters, context, and data, and asserts the two
-agree, plus optional literal anchors. A regression in the mock, the schema boundary, scoping, or
+calling `execute(ir, resolveSession(userId))` directly with the case's applied filters, and
+asserts the two agree (plus optional literal anchors, and that the cited record set equals the
+one the executor counted). A regression in the mock, the schema boundary, scoping, or
 presentation fails a case; "the model emitted valid JSON" alone does not pass one. The runner is
 shared between `pnpm eval` (console report) and `tests/eval.test.ts` (CI gate), and is pinned to
 the `MockProvider` so the gate is deterministic and free.
