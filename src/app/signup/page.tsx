@@ -97,9 +97,9 @@ export default function SignupPage() {
         </Button>
       </header>
 
-      <div className="relative z-10 grid flex-1 lg:grid-cols-[1fr_1.6fr]">
+      <div className="relative z-10 grid flex-1 lg:grid-cols-12">
         {/* LEFT — slim, plain text */}
-        <aside className="hidden flex-col justify-center gap-7 border-r border-white/10 px-10 lg:flex">
+        <aside className="hidden flex-col justify-center gap-7 border-r border-white/10 bg-white/[0.025] px-10 backdrop-blur-xl lg:col-span-4 lg:flex">
           <span className="grid size-10 place-items-center rounded-xl border bg-card text-primary">
             <SparkIcon className="size-5" />
           </span>
@@ -117,7 +117,7 @@ export default function SignupPage() {
         </aside>
 
         {/* RIGHT — the form, roomy frosted panel */}
-        <div className="flex items-center justify-center p-6 sm:p-8">
+        <div className="flex items-center justify-center p-6 sm:p-8 lg:col-span-8">
           <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-white/[0.055] p-8 shadow-2xl backdrop-blur-2xl sm:p-12">
             <h1 className="text-3xl font-semibold tracking-tight text-balance">
               Create your workspace
