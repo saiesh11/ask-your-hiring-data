@@ -75,7 +75,7 @@ export function MembersPanel(props: {
   }
 
   return (
-    <div className="py-6">
+    <div className="h-full overflow-y-auto px-4 py-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold">Members</h1>
         {props.canManage && <InviteDialog jobFamilies={props.jobFamilies} onInvite={call} />}

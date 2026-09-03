@@ -15,7 +15,7 @@ vi.mock("@/lib/tenancy/context", () => ({
   NoOrganizationError,
 }));
 
-// eslint-disable-next-line import/first -- must follow vi.mock (hoisted above)
+// Imported after vi.mock (hoisted above) so the route sees the mocked context.
 import { POST } from "@/app/api/ask/route";
 
 function grant(overrides: Record<string, unknown> = {}): void {

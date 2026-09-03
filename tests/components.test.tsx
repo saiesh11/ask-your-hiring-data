@@ -4,7 +4,18 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AnswerView } from "@/components/answer-view";
 import { Chat } from "@/components/chat";
+import { ChatStoreProvider } from "@/components/chat-store";
 import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+
+const renderChat = () => render(<Chat />, { wrapper: ChatStoreProvider });
+
+afterEach(() => {
+  try {
+    localStorage.clear();
+  } catch {
+    /* ignore */
+  }
+});
 
 afterEach(() => {
   cleanup();
@@ -62,7 +73,7 @@ describe("AnswerView", () => {
 
 describe("Chat", () => {
   it("shows suggestions in the empty state", () => {
-    render(<Chat />);
+    renderChat();
     expect(screen.getByText("Show me headcount by band")).toBeInTheDocument();
   });
 
@@ -73,7 +84,7 @@ describe("Chat", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<Chat />);
+    renderChat();
     await user.type(screen.getByLabelText("Question"), "headcount in engineering");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 
@@ -95,7 +106,7 @@ describe("Chat", () => {
       ),
     );
 
-    render(<Chat />);
+    renderChat();
     await user.type(screen.getByLabelText("Question"), "anything");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 

@@ -32,7 +32,7 @@ export function SettingsPanel(props: { name: string; slug: string; canManage: bo
   }
 
   return (
-    <div className="py-6">
+    <div className="h-full overflow-y-auto px-4 py-6">
       <h1 className="mb-4 text-lg font-semibold">Settings</h1>
       <Card className="max-w-lg">
         <CardHeader>
