@@ -13,7 +13,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "seed": "tsx scripts/seed.ts",
     "eval": "tsx src/lib/eval-runner/cli.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

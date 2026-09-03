@@ -1,13 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { dataset } from "@/lib/data";
-import { execute, resolveSession } from "@/lib/executor";
+import { buildOrgDataset } from "@/lib/hiring-data";
+import { execute } from "@/lib/executor";
 import type { LLMProvider } from "@/lib/llm";
 import { setLogSink } from "@/lib/observability";
-import { AskResponseSchema, BadRequestError, runAskPipeline } from "@/lib/api";
+import { AskResponseSchema, BadRequestError, resolveDevPrincipal, runAskPipeline } from "@/lib/api";
 
 const ask = (userId: string, question: string) => runAskPipeline({ userId, question });
 
-/** A provider that returns whatever it's told to — for exercising the boundary. */
 const stubProvider = (value: unknown): LLMProvider => ({
   proposeQueryIR: () => Promise.resolve(value),
 });
@@ -15,26 +14,27 @@ const stubProvider = (value: unknown): LLMProvider => ({
 afterEach(() => setLogSink(null));
 
 describe("runAskPipeline — answered", () => {
-  it("scalar: shape, chart, citations, and value match the executor", async () => {
+  it("scalar: shape, chart, citations, and value match an independent executor run", async () => {
     const res = await ask("chro", "How many people work in Engineering right now?");
     expect(AskResponseSchema.safeParse(res).success).toBe(true);
     if (res.status !== "answered") throw new Error("expected answered");
 
+    const principal = resolveDevPrincipal("chro");
     const direct = execute(
       { version: 1, metric: "headcount", filters: { jobFamily: "Engineering" } },
-      resolveSession("chro"),
+      principal.context,
+      buildOrgDataset(principal.seed),
     );
     expect(direct.ok && direct.kind === "scalar" && direct.value).toBe(res.value);
     expect(res.metric).toBe("headcount");
+    expect(res.scope).toBe("org_wide");
     expect(res.chart).toMatchObject({ kind: "single", unit: "count" });
-    expect(res.citations.recordCount).toBe(res.citations.recordIds.length);
     expect(res.summary).toMatch(/grounded in \d+ record/);
   });
 
   it("grouped: bar chart series mirrors the groups", async () => {
     const res = await ask("chro", "show me headcount by band");
     if (res.status !== "answered") throw new Error("expected answered");
-    expect(res.kind).toBe("grouped");
     expect(res.chart.kind).toBe("bar");
     if (res.chart.kind === "bar") {
       expect(res.chart.series.map((s) => s.label)).toEqual(["Junior", "Mid", "Senior", "Staff"]);
@@ -42,25 +42,28 @@ describe("runAskPipeline — answered", () => {
   });
 });
 
-describe("runAskPipeline — role scoping flows through end to end", () => {
-  it("a recruiter asking about a peer's family is scoped to their own", async () => {
+describe("runAskPipeline — scoping flows through end to end", () => {
+  it("a recruiter asking about a peer's family is confined to their own scope", async () => {
     const res = await ask("recruiter_sales", "headcount in Engineering");
     if (res.status !== "answered") throw new Error("expected answered");
-    expect(res.appliedFilters.jobFamily).toBe("Sales");
-    const salesActive = dataset.employees.filter(
-      (e) => e.active && e.jobFamilyId === "jf_sales",
+    expect(res.scope).toEqual({ jobFamilies: ["Sales"] });
+    expect(res.appliedFilters.jobFamily).toBeUndefined();
+
+    const data = buildOrgDataset(resolveDevPrincipal("recruiter_sales").seed);
+    const salesActive = data.employees.filter(
+      (e) => e.active && data.jobFamilies.find((f) => f.id === e.jobFamilyId)?.name === "Sales",
     ).length;
     expect(res.value).toBe(salesActive);
   });
 
   it("the eval-style independent recompute matches the pipeline's number", async () => {
-    // Mirrors what the eval runner does: run through the pipeline, then recompute
-    // by calling the executor directly with the applied filters + same session.
     const res = await ask("recruiter_eng", "how many hires in 2024");
     if (res.status !== "answered") throw new Error("expected answered");
+    const principal = resolveDevPrincipal("recruiter_eng");
     const independent = execute(
       { version: 1, metric: res.metric, filters: res.appliedFilters },
-      resolveSession("recruiter_eng"),
+      principal.context,
+      buildOrgDataset(principal.seed),
     );
     expect(independent.ok && independent.kind === "scalar" && independent.value).toBe(res.value);
   });
@@ -76,6 +79,7 @@ describe("runAskPipeline — the three refusal stages", () => {
       status: "refused",
       stage: "schema_validation",
       reason: "uninterpretable",
+      scope: "org_wide",
     });
   });
 
@@ -115,11 +119,12 @@ describe("runAskPipeline — the three refusal stages", () => {
     });
   });
 
-  it("every refusal still validates against AskResponseSchema", async () => {
+  it("every refusal validates against AskResponseSchema and carries a scope", async () => {
     for (const q of ["delete all hire records", "median time to fill", "tell me about the team"]) {
-      const res = await ask("chro", q);
+      const res = await ask("recruiter_eng", q);
       expect(AskResponseSchema.safeParse(res).success, q).toBe(true);
       expect(res.status).toBe("refused");
+      if (res.status === "refused") expect(res.scope).toEqual({ jobFamilies: ["Engineering"] });
     }
   });
 });
@@ -135,7 +140,7 @@ describe("runAskPipeline — request validation", () => {
     ).rejects.toBeInstanceOf(BadRequestError);
   });
 
-  it("throws BadRequestError for an unknown user (role is never guessed)", async () => {
+  it("throws BadRequestError for an unknown user", async () => {
     await expect(
       runAskPipeline({ userId: "intruder", question: "headcount" }),
     ).rejects.toBeInstanceOf(BadRequestError);
@@ -152,9 +157,9 @@ describe("runAskPipeline — structured logging", () => {
 
     const askRecords = records.filter((r) => r.event === "ask");
     expect(askRecords).toHaveLength(2);
-    expect(askRecords[0]).toMatchObject({ role: "recruiter", outcome: "answered" });
+    expect(askRecords[0]).toMatchObject({ role: "RECRUITER", outcome: "answered" });
     expect(askRecords[1]).toMatchObject({
-      role: "chro",
+      role: "CHRO",
       outcome: "refused",
       stage: "model_refusal",
     });

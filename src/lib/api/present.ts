@@ -1,6 +1,6 @@
 import type { GroupedAnswer, ScalarAnswer } from "@/lib/executor";
 import type { Filters, Metric } from "@/lib/query-ir";
-import type { AnsweredResponse, ChartPayload, Citations } from "./schema";
+import type { AnsweredResponse, ChartPayload, Citations, OrgScope } from "./schema";
 
 /**
  * Turns a deterministic executor answer into the grounded, chart-ready response
@@ -15,9 +15,13 @@ const METRIC_LABELS: Record<Metric, string> = {
   headcount_by_band: "Headcount by band",
 };
 
-function filterSuffix(filters: Filters): string {
+function contextSuffix(filters: Filters, scope: OrgScope): string {
   const parts: string[] = [];
-  if (filters.jobFamily) parts.push(filters.jobFamily);
+  if (filters.jobFamily) {
+    parts.push(filters.jobFamily);
+  } else if (scope !== "org_wide") {
+    parts.push(scope.jobFamilies.join(" / "));
+  }
   if (filters.band) parts.push(`${filters.band} band`);
   if (filters.dateRange) parts.push(`${filters.dateRange.from} to ${filters.dateRange.to}`);
   return parts.length > 0 ? ` — ${parts.join(", ")}` : "";
@@ -32,7 +36,7 @@ function valuePhrase(unit: "count" | "days", value: number): string {
 }
 
 export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): AnsweredResponse {
-  const label = `${METRIC_LABELS[answer.metric]}${filterSuffix(answer.appliedFilters)}`;
+  const label = `${METRIC_LABELS[answer.metric]}${contextSuffix(answer.appliedFilters, answer.scope)}`;
   const citations: Citations = {
     recordIds: answer.citations.recordIds,
     fields: answer.citations.fields,
@@ -41,12 +45,7 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
   const grounded = `grounded in ${plural(citations.recordCount, "record")}`;
 
   if (answer.kind === "scalar") {
-    const chart: ChartPayload = {
-      kind: "single",
-      unit: answer.unit,
-      label,
-      value: answer.value,
-    };
+    const chart: ChartPayload = { kind: "single", unit: answer.unit, label, value: answer.value };
     return {
       status: "answered",
       metric: answer.metric,
@@ -54,6 +53,7 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
       value: answer.value,
       unit: answer.unit,
       appliedFilters: answer.appliedFilters,
+      scope: answer.scope,
       citations,
       chart,
       summary: `${label}: ${valuePhrase(answer.unit, answer.value)} (${grounded}).`,
@@ -72,6 +72,7 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
     groups: answer.groups,
     unit: answer.unit,
     appliedFilters: answer.appliedFilters,
+    scope: answer.scope,
     citations,
     chart,
     summary: `${label}: ${answer.groups.map((g) => `${g.key} ${g.value}`).join(", ")} (${grounded}).`,

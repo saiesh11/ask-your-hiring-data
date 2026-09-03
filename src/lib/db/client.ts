@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma";
+import { PrismaClient } from "@/generated/prisma/client";
 
 /**
  * Prisma 7 runtime client. Prisma 7 dropped `datasourceUrl` / `datasources` on

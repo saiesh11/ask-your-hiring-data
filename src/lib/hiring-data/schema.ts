@@ -2,30 +2,27 @@ import * as z from "zod";
 import { BANDS, JOB_FAMILIES } from "@/lib/query-ir";
 
 /**
- * Zod schemas for the seed fixtures. The loader validates the assembled dataset
- * against {@link DatasetSchema} at import time and throws if anything is off, so
- * a malformed fixture can never reach the executor silently.
- *
- * `.strictObject` everywhere: an unexpected column in a fixture is a bug, not
- * something to ignore.
+ * The shape the executor computes over: one organization's hiring data with
+ * ISO date strings. Both data sources (in-memory generator, Prisma) validate
+ * their output against {@link OrgHiringDataSchema} so a malformed dataset fails
+ * loudly instead of reaching the executor.
  */
 
 const isoDate = z.iso.date();
 const id = z.string().min(1);
 
-export const JobFamilySchema = z.strictObject({
+export const JobFamilyRowSchema = z.strictObject({
   id,
   name: z.enum(JOB_FAMILIES),
 });
 
-export const BandSchema = z.strictObject({
+export const BandRowSchema = z.strictObject({
   id,
   name: z.enum(BANDS),
-  // Explicit seniority order: Junior=1 … Staff=4.
   order: z.number().int().min(1).max(BANDS.length),
 });
 
-export const EmployeeSchema = z.strictObject({
+export const EmployeeRowSchema = z.strictObject({
   id,
   jobFamilyId: id,
   department: z.string().min(1),
@@ -34,7 +31,7 @@ export const EmployeeSchema = z.strictObject({
   active: z.boolean(),
 });
 
-export const JobSchema = z
+export const JobRowSchema = z
   .strictObject({
     id,
     jobFamilyId: id,
@@ -50,42 +47,23 @@ export const JobSchema = z
     error: "job.filledDate must be on or after job.postedDate",
   });
 
-export const DemoUserSchema = z
+export const OrgHiringDataSchema = z
   .strictObject({
-    id,
-    displayName: z.string().min(1),
-    role: z.enum(["recruiter", "chro"]),
-    // Non-null for recruiters (their scope), null for the org-wide CHRO.
-    jobFamilyId: id.nullable(),
-  })
-  .refine((user) => (user.role === "recruiter") === (user.jobFamilyId !== null), {
-    error: "a recruiter must have a jobFamilyId; the CHRO must not",
-  });
-
-/** The three demo accounts, deliberately chosen to make role-scoping testable. */
-export const REQUIRED_USER_IDS = ["recruiter_eng", "recruiter_sales", "chro"] as const;
-
-export const DatasetSchema = z
-  .strictObject({
-    jobFamilies: z.array(JobFamilySchema).min(1),
-    bands: z.array(BandSchema).min(1),
-    employees: z.array(EmployeeSchema).min(1),
-    jobs: z.array(JobSchema).min(1),
-    users: z.array(DemoUserSchema).length(REQUIRED_USER_IDS.length),
+    jobFamilies: z.array(JobFamilyRowSchema).min(1),
+    bands: z.array(BandRowSchema).min(1),
+    employees: z.array(EmployeeRowSchema),
+    jobs: z.array(JobRowSchema),
   })
   .superRefine((data, ctx) => {
     const familyIds = new Set(data.jobFamilies.map((f) => f.id));
     const bandIds = new Set(data.bands.map((b) => b.id));
 
-    // Unique ids within every collection.
-    const collections = [
+    for (const [name, rows] of [
       ["jobFamilies", data.jobFamilies],
       ["bands", data.bands],
       ["employees", data.employees],
       ["jobs", data.jobs],
-      ["users", data.users],
-    ] as const;
-    for (const [name, rows] of collections) {
+    ] as const) {
       const seen = new Set<string>();
       for (const row of rows) {
         if (seen.has(row.id)) {
@@ -95,7 +73,6 @@ export const DatasetSchema = z
       }
     }
 
-    // The closed vocabularies must all be present (order-independent).
     const familyNames = new Set(data.jobFamilies.map((f) => f.name));
     for (const expected of JOB_FAMILIES) {
       if (!familyNames.has(expected)) {
@@ -109,17 +86,14 @@ export const DatasetSchema = z
       }
     }
 
-    // band.order is a 1..N permutation.
     const orders = [...data.bands.map((b) => b.order)].sort((a, b) => a - b);
-    const expectedOrders = data.bands.map((_, i) => i + 1);
-    if (orders.join(",") !== expectedOrders.join(",")) {
+    if (orders.join(",") !== data.bands.map((_, i) => i + 1).join(",")) {
       ctx.addIssue({
         code: "custom",
         message: `bands.order must be a 1..${data.bands.length} permutation`,
       });
     }
 
-    // Referential integrity.
     data.employees.forEach((e, i) => {
       if (!familyIds.has(e.jobFamilyId)) {
         ctx.addIssue({
@@ -152,30 +126,10 @@ export const DatasetSchema = z
         });
       }
     });
-    data.users.forEach((u, i) => {
-      if (u.jobFamilyId !== null && !familyIds.has(u.jobFamilyId)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["users", i, "jobFamilyId"],
-          message: `unknown jobFamilyId "${u.jobFamilyId}"`,
-        });
-      }
-    });
-
-    // Exactly the three required demo accounts.
-    const gotUserIds = [...data.users.map((u) => u.id)].sort();
-    const wantUserIds = [...REQUIRED_USER_IDS].sort();
-    if (gotUserIds.join(",") !== wantUserIds.join(",")) {
-      ctx.addIssue({
-        code: "custom",
-        message: `users must be exactly: ${REQUIRED_USER_IDS.join(", ")}`,
-      });
-    }
   });
 
-export type JobFamily = z.infer<typeof JobFamilySchema>;
-export type Band = z.infer<typeof BandSchema>;
-export type Employee = z.infer<typeof EmployeeSchema>;
-export type Job = z.infer<typeof JobSchema>;
-export type DemoUser = z.infer<typeof DemoUserSchema>;
-export type Dataset = z.infer<typeof DatasetSchema>;
+export type JobFamilyRow = z.infer<typeof JobFamilyRowSchema>;
+export type BandRow = z.infer<typeof BandRowSchema>;
+export type EmployeeRow = z.infer<typeof EmployeeRowSchema>;
+export type JobRow = z.infer<typeof JobRowSchema>;
+export type OrgHiringData = z.infer<typeof OrgHiringDataSchema>;

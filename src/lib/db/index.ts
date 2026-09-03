@@ -1,7 +1,7 @@
 // Enums + types only — importing this barrel never constructs a client.
 // The client lives at "@/lib/db/client" and is imported explicitly by code
 // that actually touches the database.
-export { Prisma, Role, JobStatus } from "@/generated/prisma";
+export { Prisma, Role, JobStatus } from "@/generated/prisma/client";
 export type {
   User,
   Organization,
@@ -11,4 +11,4 @@ export type {
   Band,
   Employee,
   Job,
-} from "@/generated/prisma";
+} from "@/generated/prisma/client";

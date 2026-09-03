@@ -1,22 +1,43 @@
-import type { Filters } from "@/lib/query-ir";
-import type { Session } from "./session";
+import type { JobFamily } from "@/lib/query-ir";
+import type { ExecutionContext } from "./context";
+
+/** Machine-readable description of what a query was confined to. */
+export type OrgScope = "org_wide" | { jobFamilies: JobFamily[] };
+
+export interface ResolvedScope {
+  /** Every row must belong to one of these families, or null for no constraint. */
+  allowedFamilies: JobFamily[] | null;
+  /** The family the IR asked for, kept only if it is within the caller's scope. */
+  effectiveJobFamily?: JobFamily;
+  orgScope: OrgScope;
+}
 
 /**
- * Server-side role scoping — the security boundary. Applied inside the executor,
- * first, on every query. It is NOT implied by the prompt and NOT trusted to the
- * request body.
- *
- * - CHRO: org-wide, filters pass through untouched.
- * - Recruiter: `jobFamily` is FORCED to their own family, overriding whatever
- *   was requested. We do not reject a cross-family request — we silently narrow
- *   it and let the (possibly empty) result stand.
- *
- * Idempotent: `scopeFilters(scopeFilters(f, s), s)` === `scopeFilters(f, s)`, so
- * the eval suite can re-run it when independently recomputing expected values.
+ * The security boundary. Combines the caller's context with the family the IR
+ * requested:
+ *  - org-wide caller: no family constraint; the IR's family passes through.
+ *  - scoped caller asking within scope: narrowed to that one family.
+ *  - scoped caller asking outside scope: silently confined to their whole
+ *    scope — never rejected, never widened.
  */
-export function scopeFilters(filters: Filters, session: Session): Filters {
-  if (session.role === "chro") {
-    return { ...filters };
+export function resolveScope(
+  context: ExecutionContext,
+  requestedFamily: JobFamily | undefined,
+): ResolvedScope {
+  if (context.scope === null) {
+    return { allowedFamilies: null, effectiveJobFamily: requestedFamily, orgScope: "org_wide" };
   }
-  return { ...filters, jobFamily: session.jobFamilyName };
+  const scope = context.scope;
+  if (requestedFamily && scope.includes(requestedFamily)) {
+    return {
+      allowedFamilies: [requestedFamily],
+      effectiveJobFamily: requestedFamily,
+      orgScope: { jobFamilies: [requestedFamily] },
+    };
+  }
+  return {
+    allowedFamilies: [...scope],
+    effectiveJobFamily: undefined,
+    orgScope: { jobFamilies: [...scope] },
+  };
 }

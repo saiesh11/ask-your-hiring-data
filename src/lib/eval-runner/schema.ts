@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { FiltersSchema, GROUP_BY_FIELDS, METRICS } from "@/lib/query-ir";
-import { REFUSAL_RESPONSE_REASONS, REFUSAL_STAGES } from "@/lib/api";
+import { OrgScopeSchema, REFUSAL_RESPONSE_REASONS, REFUSAL_STAGES } from "@/lib/api";
 
 /**
  * The eval set is the AI-quality gate. Each case is validated against this
@@ -12,8 +12,10 @@ const AnsweredExpectation = z.strictObject({
   refused: z.literal(false),
   metric: z.enum(METRICS),
   groupBy: z.enum(GROUP_BY_FIELDS).optional(),
-  /** The filters the executor should have applied (i.e. AFTER role scoping). */
-  appliedFilters: FiltersSchema,
+  /** Filters the executor should have applied (after scoping). */
+  appliedFilters: FiltersSchema.optional(),
+  /** The org scope the query should have run under. */
+  scope: OrgScopeSchema.optional(),
   /** Optional hard anchors — a literal the pipeline value/groups must also equal. */
   value: z.number().optional(),
   groups: z.array(z.strictObject({ key: z.string(), value: z.number() })).optional(),

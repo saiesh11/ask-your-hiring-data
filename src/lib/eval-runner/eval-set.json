@@ -3,7 +3,13 @@
     "id": "headcount-org",
     "question": "How many people are currently active across the company?",
     "userId": "chro",
-    "expected": { "refused": false, "metric": "headcount", "appliedFilters": {}, "value": 49 }
+    "expected": {
+      "refused": false,
+      "metric": "headcount",
+      "scope": "org_wide",
+      "appliedFilters": {},
+      "value": 49
+    }
   },
   {
     "id": "headcount-engineering",
@@ -12,6 +18,7 @@
     "expected": {
       "refused": false,
       "metric": "headcount",
+      "scope": "org_wide",
       "appliedFilters": { "jobFamily": "Engineering" },
       "value": 10
     }
@@ -23,6 +30,7 @@
     "expected": {
       "refused": false,
       "metric": "headcount_by_band",
+      "scope": "org_wide",
       "appliedFilters": {},
       "groups": [
         { "key": "Junior", "value": 16 },
@@ -41,6 +49,7 @@
       "refused": false,
       "metric": "headcount",
       "groupBy": "jobFamily",
+      "scope": "org_wide",
       "appliedFilters": {},
       "groups": [
         { "key": "Engineering", "value": 10 },
@@ -55,7 +64,13 @@
     "id": "open-reqs-org",
     "question": "How many open requisitions do we have?",
     "userId": "chro",
-    "expected": { "refused": false, "metric": "open_reqs", "appliedFilters": {}, "value": 18 }
+    "expected": {
+      "refused": false,
+      "metric": "open_reqs",
+      "scope": "org_wide",
+      "appliedFilters": {},
+      "value": 18
+    }
   },
   {
     "id": "open-reqs-by-family",
@@ -65,6 +80,7 @@
       "refused": false,
       "metric": "open_reqs",
       "groupBy": "jobFamily",
+      "scope": "org_wide",
       "appliedFilters": {},
       "groups": [
         { "key": "Engineering", "value": 3 },
@@ -83,6 +99,7 @@
     "expected": {
       "refused": false,
       "metric": "hire_count",
+      "scope": "org_wide",
       "appliedFilters": { "dateRange": { "from": "2024-01-01", "to": "2024-12-31" } },
       "value": 10
     }
@@ -94,6 +111,7 @@
     "expected": {
       "refused": false,
       "metric": "hire_count",
+      "scope": "org_wide",
       "appliedFilters": {
         "jobFamily": "Engineering",
         "dateRange": { "from": "2024-01-01", "to": "2024-12-31" }
@@ -108,6 +126,7 @@
     "expected": {
       "refused": false,
       "metric": "avg_time_to_fill",
+      "scope": "org_wide",
       "appliedFilters": {},
       "value": 61.9
     }
@@ -119,6 +138,7 @@
     "expected": {
       "refused": false,
       "metric": "avg_time_to_fill",
+      "scope": "org_wide",
       "appliedFilters": { "jobFamily": "Sales" },
       "value": 92.5
     }
@@ -127,11 +147,12 @@
     "id": "scope-recruiter-eng-headcount",
     "question": "How many people are on my team?",
     "userId": "recruiter_eng",
-    "note": "role scoping: recruiter with no explicit family is scoped to their own",
+    "note": "role scoping: a recruiter with no explicit family is confined to their own",
     "expected": {
       "refused": false,
       "metric": "headcount",
-      "appliedFilters": { "jobFamily": "Engineering" },
+      "scope": { "jobFamilies": ["Engineering"] },
+      "appliedFilters": {},
       "value": 10
     }
   },
@@ -139,11 +160,12 @@
     "id": "scope-recruiter-sales-override",
     "question": "What's the headcount in Engineering?",
     "userId": "recruiter_sales",
-    "note": "role scoping OVERRIDE: a Sales recruiter asking about Engineering is forced back to Sales",
+    "note": "OVERRIDE: a Sales recruiter asking about Engineering is confined back to Sales",
     "expected": {
       "refused": false,
       "metric": "headcount",
-      "appliedFilters": { "jobFamily": "Sales" },
+      "scope": { "jobFamilies": ["Sales"] },
+      "appliedFilters": {},
       "value": 11
     }
   },
@@ -154,7 +176,8 @@
     "expected": {
       "refused": false,
       "metric": "open_reqs",
-      "appliedFilters": { "jobFamily": "Engineering" },
+      "scope": { "jobFamilies": ["Engineering"] },
+      "appliedFilters": {},
       "value": 3
     }
   },
@@ -166,10 +189,8 @@
     "expected": {
       "refused": false,
       "metric": "hire_count",
-      "appliedFilters": {
-        "jobFamily": "Sales",
-        "dateRange": { "from": "2024-01-01", "to": "2024-12-31" }
-      },
+      "scope": { "jobFamilies": ["Sales"] },
+      "appliedFilters": { "dateRange": { "from": "2024-01-01", "to": "2024-12-31" } },
       "value": 1
     }
   },

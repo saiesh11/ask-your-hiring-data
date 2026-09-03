@@ -28,12 +28,14 @@ describe("POST /api/ask", () => {
     expect(body).toMatchObject({ status: "refused", stage: "model_refusal" });
   });
 
-  it("role scoping is visible in the HTTP response", async () => {
+  it("job-family scoping is visible in the HTTP response", async () => {
     const res = await POST(
       askRequest({ userId: "recruiter_sales", question: "headcount in Engineering" }),
     );
     const body = await res.json();
-    expect(body.appliedFilters.jobFamily).toBe("Sales");
+    // The Sales recruiter's request is confined to Sales, not Engineering.
+    expect(body.scope).toEqual({ jobFamilies: ["Sales"] });
+    expect(body.appliedFilters.jobFamily).toBeUndefined();
   });
 
   it("400 when the body is not valid JSON", async () => {

@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { FiltersSchema, METRICS } from "@/lib/query-ir";
+import { Role } from "@/lib/db";
+import { FiltersSchema, JOB_FAMILIES, METRICS } from "@/lib/query-ir";
 
 /**
  * The I/O contract for `POST /api/ask` and the eval runner. Both sides are Zod
@@ -9,6 +10,7 @@ import { FiltersSchema, METRICS } from "@/lib/query-ir";
  */
 
 export const AskRequestSchema = z.strictObject({
+  // TODO(S5): drop `userId` — the caller comes from the Auth.js session.
   userId: z.string().min(1),
   question: z.string().trim().min(1).max(500),
 });
@@ -40,6 +42,14 @@ export const CitationsSchema = z.strictObject({
 });
 export type Citations = z.infer<typeof CitationsSchema>;
 
+// --- org scope --------------------------------------------------------
+
+export const OrgScopeSchema = z.union([
+  z.literal("org_wide"),
+  z.strictObject({ jobFamilies: z.array(z.enum(JOB_FAMILIES)) }),
+]);
+export type OrgScope = z.infer<typeof OrgScopeSchema>;
+
 // --- response --------------------------------------------------------
 
 /** Why an answer was refused. Superset of the model's refusal reasons. */
@@ -63,6 +73,7 @@ const AnsweredSchema = z.strictObject({
   groups: z.array(z.strictObject({ key: z.string(), value: z.number() })).optional(),
   unit: z.enum(["count", "days"]),
   appliedFilters: FiltersSchema,
+  scope: OrgScopeSchema,
   citations: CitationsSchema,
   chart: ChartPayloadSchema,
   summary: z.string(),
@@ -73,6 +84,7 @@ const RefusedSchema = z.strictObject({
   stage: z.enum(REFUSAL_STAGES),
   reason: z.enum(REFUSAL_RESPONSE_REASONS),
   message: z.string(),
+  scope: OrgScopeSchema,
   // Present only when the pipeline reached the executor.
   appliedFilters: FiltersSchema.optional(),
 });
@@ -82,12 +94,12 @@ export type AskResponse = z.infer<typeof AskResponseSchema>;
 export type AnsweredResponse = z.infer<typeof AnsweredSchema>;
 export type RefusedResponse = z.infer<typeof RefusedSchema>;
 
-// --- GET /api/users (UI scaffolding for the "log in as" switcher) ------
+// --- GET /api/users (dev "view as" switcher; replaced by real auth in S5) ---
 
 export const DemoUserPublicSchema = z.strictObject({
   id: z.string(),
   displayName: z.string(),
-  role: z.enum(["recruiter", "chro"]),
+  role: z.enum(Role),
   scope: z.string(),
 });
 export type DemoUserPublic = z.infer<typeof DemoUserPublicSchema>;

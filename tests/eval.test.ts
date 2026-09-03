@@ -17,13 +17,17 @@ describe("eval suite — the AI-quality gate", () => {
 
     const hasGroupBy = cases.some((c) => !c.expected.refused && c.expected.groupBy !== undefined);
     const hasDateRange = cases.some(
-      (c) => !c.expected.refused && c.expected.appliedFilters.dateRange !== undefined,
+      (c) => !c.expected.refused && c.expected.appliedFilters?.dateRange !== undefined,
+    );
+    const hasScopedContext = cases.some(
+      (c) => !c.expected.refused && typeof c.expected.scope === "object",
     );
     expect(hasGroupBy, "at least one groupBy case").toBe(true);
     expect(hasDateRange, "at least one dateRange case").toBe(true);
+    expect(hasScopedContext, "at least one job-family-scoped answered case").toBe(true);
 
     const scopingCases = cases.filter((c) => c.userId.startsWith("recruiter_"));
-    expect(scopingCases.length, "at least 3 role-scoping cases").toBeGreaterThanOrEqual(3);
+    expect(scopingCases.length, "at least 3 scoping cases").toBeGreaterThanOrEqual(3);
     expect(
       scopingCases.some((c) => c.id === "scope-recruiter-sales-override" && !c.expected.refused),
       "at least one cross-family override case",

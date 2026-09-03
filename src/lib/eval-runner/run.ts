@@ -1,23 +1,25 @@
 import evalSetRaw from "./eval-set.json";
 import { EvalSetSchema, type EvalCase } from "./schema";
-import { runAskPipeline } from "@/lib/api";
-import { execute, resolveSession } from "@/lib/executor";
+import { resolveDevPrincipal, runAskPipeline } from "@/lib/api";
+import { execute } from "@/lib/executor";
+import { buildOrgDataset } from "@/lib/hiring-data";
 import { getLlmProvider } from "@/lib/llm";
 import type { QueryIR } from "@/lib/query-ir";
 
 /**
  * The eval gate is a deterministic regression check, so it is pinned to the
  * MockProvider regardless of the ambient environment — a network model would
- * make the gate non-deterministic and could bill the user on `pnpm eval`.
+ * make the gate non-deterministic and could bill on `pnpm eval`.
  */
 const EVAL_PROVIDER = getLlmProvider({});
 
 /**
  * Runs each eval case through the EXACT pipeline the API route uses, then — for
- * answered cases — independently recomputes the expected value by calling the
- * executor directly with the case's applied filters under the same session, and
- * asserts the two agree. That catches a regression in the mock, the schema
- * boundary, role scoping, or presentation — not just "did the model emit JSON".
+ * answered cases — independently recomputes the value by calling the executor
+ * directly with the case's applied filters, the same execution context, and the
+ * same org data, and asserts the two agree. Plus optional literal anchors. This
+ * catches a regression in the mock, the schema boundary, scoping, or
+ * presentation — not just "did the model emit JSON".
  */
 
 export type EvalCaseResult = {
@@ -80,20 +82,29 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
     if (response.metric !== expected.metric) {
       failures.push(`metric: expected "${expected.metric}", got "${response.metric}"`);
     }
-    if (!equal(response.appliedFilters, expected.appliedFilters)) {
+    if (expected.scope !== undefined && !equal(response.scope, expected.scope)) {
+      failures.push(
+        `scope: expected ${stableStringify(expected.scope)}, got ${stableStringify(response.scope)}`,
+      );
+    }
+    if (
+      expected.appliedFilters !== undefined &&
+      !equal(response.appliedFilters, expected.appliedFilters)
+    ) {
       failures.push(
         `appliedFilters: expected ${stableStringify(expected.appliedFilters)}, got ${stableStringify(response.appliedFilters)}`,
       );
     }
 
     // Independent recompute via the executor directly.
+    const principal = resolveDevPrincipal(userId);
     const ir: QueryIR = {
       version: 1,
       metric: expected.metric,
-      filters: expected.appliedFilters,
+      filters: expected.appliedFilters ?? {},
       ...(expected.groupBy ? { groupBy: expected.groupBy } : {}),
     };
-    const recomputed = execute(ir, resolveSession(userId));
+    const recomputed = execute(ir, principal.context, buildOrgDataset(principal.seed));
     if (!recomputed.ok) {
       failures.push(`independent recompute did not produce an answer (${recomputed.reason})`);
     } else if (recomputed.kind === "scalar" && response.kind === "scalar") {
@@ -119,7 +130,7 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
 
   const observed =
     response.status === "answered"
-      ? `answered ${response.metric} ${response.kind === "scalar" ? String(response.value) : stableStringify(response.groups)} filters=${stableStringify(response.appliedFilters)}`
+      ? `answered ${response.metric} ${response.kind === "scalar" ? String(response.value) : stableStringify(response.groups)} scope=${stableStringify(response.scope)}`
       : `refused ${response.stage}/${response.reason}`;
 
   return { id, question, userId, passed: failures.length === 0, failures, observed };

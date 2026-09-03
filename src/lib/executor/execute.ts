@@ -1,5 +1,3 @@
-import { dataset, getJobFamilyById } from "@/lib/data";
-import type { Employee, Job } from "@/lib/data";
 import {
   JOB_FAMILIES,
   type Band as BandName,
@@ -10,13 +8,14 @@ import {
   type Metric,
   type QueryIR,
 } from "@/lib/query-ir";
-import { scopeFilters } from "./scope";
-import type { Session } from "./session";
+import type { OrgHiringData } from "@/lib/hiring-data";
+import type { ExecutionContext } from "./context";
+import { resolveScope, type OrgScope } from "./scope";
 
 /**
- * The deterministic query executor. Plain TypeScript, no AI. This is the ONLY
- * code path that reads the dataset. It:
- *   1. applies server-side role scoping (first, always),
+ * The deterministic query executor. Plain TypeScript, no AI. Given a validated
+ * IR, a resolved {@link ExecutionContext}, and one org's hiring data, it:
+ *   1. applies job-family scoping (first, always),
  *   2. rejects filters a metric can't honor,
  *   3. computes the answer and cites the exact records and fields it used,
  *   4. returns a distinct failure for "well-formed but zero matching rows".
@@ -25,9 +24,7 @@ import type { Session } from "./session";
 export type Unit = "count" | "days";
 
 export type Citations = {
-  /** ids of every record that fed the computation */
   recordIds: string[];
-  /** record fields the metric + filters actually read */
   fields: string[];
 };
 
@@ -38,6 +35,7 @@ export type ScalarAnswer = {
   value: number;
   unit: Unit;
   appliedFilters: Filters;
+  scope: OrgScope;
   citations: Citations;
 };
 
@@ -51,6 +49,7 @@ export type GroupedAnswer = {
   groups: GroupBucket[];
   unit: Unit;
   appliedFilters: Filters;
+  scope: OrgScope;
   citations: Citations;
 };
 
@@ -61,20 +60,19 @@ export type ExecutorFailure = {
   reason: ExecutorFailureReason;
   message: string;
   appliedFilters: Filters;
+  scope: OrgScope;
 };
 
 export type ExecutorResult = ScalarAnswer | GroupedAnswer | ExecutorFailure;
 
 // --- Metric capability matrix (documented in PROCESS.md) -------------------
-// Stock metrics are point-in-time snapshots and reject a dateRange; flow
-// metrics accept one. Grouped averages are deferred to v2.
 
 type BaseMetric = "hire_count" | "open_reqs" | "headcount" | "avg_time_to_fill";
 type CountMetric = Exclude<BaseMetric, "avg_time_to_fill">;
 
 const ACCEPTS_DATE_RANGE: Record<BaseMetric, boolean> = {
-  hire_count: true, // filters on hireDate
-  avg_time_to_fill: true, // filters on filledDate
+  hire_count: true,
+  avg_time_to_fill: true,
   open_reqs: false,
   headcount: false,
 };
@@ -85,8 +83,6 @@ const BASE_FIELDS: Record<BaseMetric, readonly string[]> = {
   headcount: ["active"],
   avg_time_to_fill: ["status", "postedDate", "filledDate"],
 };
-
-// --- Small deterministic helpers -----------------------------------------
 
 const DAY_MS = 86_400_000;
 
@@ -100,53 +96,6 @@ function round1(value: number): number {
 
 function withinRange(dateISO: string, range: DateRange | undefined): boolean {
   return !range || (dateISO >= range.from && dateISO <= range.to);
-}
-
-function familyNameOf(jobFamilyId: string): string {
-  const family = getJobFamilyById(jobFamilyId);
-  if (!family) {
-    // Unreachable: referential integrity is validated at fixture load.
-    throw new Error(`dangling jobFamilyId "${jobFamilyId}"`);
-  }
-  return family.name;
-}
-
-function bandNameOf(bandId: string): string {
-  const band = dataset.bands.find((b) => b.id === bandId);
-  if (!band) {
-    throw new Error(`dangling bandId "${bandId}"`);
-  }
-  return band.name;
-}
-
-function bandsBySeniority(): BandName[] {
-  return [...dataset.bands].sort((a, b) => a.order - b.order).map((b) => b.name);
-}
-
-function matchesFamilyAndBand(
-  row: { jobFamilyId: string; bandId: string },
-  filters: Filters,
-): boolean {
-  if (filters.jobFamily && familyNameOf(row.jobFamilyId) !== filters.jobFamily) return false;
-  if (filters.band && bandNameOf(row.bandId) !== filters.band) return false;
-  return true;
-}
-
-function employeesMatching(filters: Filters): Employee[] {
-  return dataset.employees.filter((e) => matchesFamilyAndBand(e, filters));
-}
-
-function jobsMatching(filters: Filters): Job[] {
-  return dataset.jobs.filter((j) => matchesFamilyAndBand(j, filters));
-}
-
-function fieldsFor(base: BaseMetric, filters: Filters, groupBy?: GroupByField): string[] {
-  const set = new Set<string>(BASE_FIELDS[base]);
-  if (filters.jobFamily) set.add("jobFamilyId");
-  if (filters.band) set.add("bandId");
-  if (groupBy === "band") set.add("bandId");
-  if (groupBy === "jobFamily") set.add("jobFamilyId");
-  return [...set];
 }
 
 // --- Query planning ------------------------------------------------------
@@ -170,174 +119,229 @@ function planQuery(ir: QueryIR): QueryPlan {
   return { base: ir.metric, groupBy: ir.groupBy };
 }
 
-/** Reported metric name — collapses headcount + groupBy:band onto headcount_by_band. */
 function reportMetric(ir: QueryIR, base: BaseMetric, groupBy: GroupByField | undefined): Metric {
   if (base === "headcount" && groupBy === "band") return "headcount_by_band";
   return ir.metric;
 }
 
-// --- Base computation ---------------------------------------------------
+function fieldsFor(base: BaseMetric, filters: Filters, groupBy?: GroupByField): string[] {
+  const set = new Set<string>(BASE_FIELDS[base]);
+  if (filters.jobFamily) set.add("jobFamilyId");
+  if (filters.band) set.add("bandId");
+  if (groupBy === "band") set.add("bandId");
+  if (groupBy === "jobFamily") set.add("jobFamilyId");
+  return [...set];
+}
 
-/** Rows + numeric value for one base metric under a fully-resolved filter set. */
-function computeBase(
-  base: BaseMetric,
-  filters: Filters,
-): { value: number; ids: string[]; unit: Unit; hadRows: boolean } {
-  switch (base) {
-    case "hire_count": {
-      const rows = employeesMatching(filters).filter((e) =>
-        withinRange(e.hireDate, filters.dateRange),
-      );
-      return { value: rows.length, ids: ids(rows), unit: "count", hadRows: rows.length > 0 };
-    }
-    case "open_reqs": {
-      const rows = jobsMatching(filters).filter((j) => j.status === "open");
-      return { value: rows.length, ids: ids(rows), unit: "count", hadRows: rows.length > 0 };
-    }
-    case "headcount": {
-      const rows = employeesMatching(filters).filter((e) => e.active);
-      return { value: rows.length, ids: ids(rows), unit: "count", hadRows: rows.length > 0 };
-    }
-    case "avg_time_to_fill": {
-      const rows = jobsMatching(filters).filter(
-        (j) =>
-          j.status === "filled" &&
-          j.filledDate !== null &&
-          withinRange(j.filledDate, filters.dateRange),
-      );
-      if (rows.length === 0) {
-        return { value: 0, ids: [], unit: "days", hadRows: false };
+// --- Executor ---------------------------------------------------------
+
+export function execute(
+  queryIR: QueryIR,
+  context: ExecutionContext,
+  data: OrgHiringData,
+): ExecutorResult {
+  const familyNameById = new Map(data.jobFamilies.map((f) => [f.id, f.name] as const));
+  const bandNameById = new Map(data.bands.map((b) => [b.id, b.name] as const));
+  const bandsBySeniority = [...data.bands].sort((a, b) => a.order - b.order).map((b) => b.name);
+
+  const familyNameOf = (id: string): FamilyName => {
+    const name = familyNameById.get(id);
+    if (!name) throw new Error(`dangling jobFamilyId "${id}"`);
+    return name;
+  };
+  const bandNameOf = (id: string): BandName => {
+    const name = bandNameById.get(id);
+    if (!name) throw new Error(`dangling bandId "${id}"`);
+    return name;
+  };
+
+  const { allowedFamilies, effectiveJobFamily, orgScope } = resolveScope(
+    context,
+    queryIR.filters.jobFamily,
+  );
+  const allowSet = allowedFamilies ? new Set<FamilyName>(allowedFamilies) : null;
+
+  const appliedFilters: Filters = {
+    ...(effectiveJobFamily ? { jobFamily: effectiveJobFamily } : {}),
+    ...(queryIR.filters.band ? { band: queryIR.filters.band } : {}),
+    ...(queryIR.filters.dateRange ? { dateRange: queryIR.filters.dateRange } : {}),
+  };
+
+  const fail = (reason: ExecutorFailureReason, message: string): ExecutorFailure => ({
+    ok: false,
+    reason,
+    message,
+    appliedFilters,
+    scope: orgScope,
+  });
+
+  const plan = planQuery(queryIR);
+  if ("unsupported" in plan) {
+    return fail("unsupported_filter_for_metric", plan.unsupported);
+  }
+  if (queryIR.filters.dateRange && !ACCEPTS_DATE_RANGE[plan.base]) {
+    return fail(
+      "unsupported_filter_for_metric",
+      `The "${queryIR.metric}" metric is a point-in-time snapshot and does not accept a date range.`,
+    );
+  }
+
+  const metric = reportMetric(queryIR, plan.base, plan.groupBy);
+  const dateRange = queryIR.filters.dateRange;
+
+  // --- row filtering ---------------------------------------------------
+  const familyPasses = (jobFamilyId: string, groupFamily?: FamilyName): boolean => {
+    const name = familyNameOf(jobFamilyId);
+    if (allowSet && !allowSet.has(name)) return false;
+    if (effectiveJobFamily && name !== effectiveJobFamily) return false;
+    if (groupFamily && name !== groupFamily) return false;
+    return true;
+  };
+  const bandPasses = (bandId: string, groupBand?: BandName): boolean => {
+    const want = groupBand ?? queryIR.filters.band;
+    return !want || bandNameOf(bandId) === want;
+  };
+
+  type BaseFilter = { family?: FamilyName; band?: BandName };
+
+  function computeBase(
+    base: BaseMetric,
+    f: BaseFilter,
+  ): {
+    value: number;
+    ids: string[];
+    unit: Unit;
+    hadRows: boolean;
+  } {
+    switch (base) {
+      case "hire_count": {
+        const rows = data.employees.filter(
+          (e) =>
+            familyPasses(e.jobFamilyId, f.family) &&
+            bandPasses(e.bandId, f.band) &&
+            withinRange(e.hireDate, dateRange),
+        );
+        return {
+          value: rows.length,
+          ids: rows.map((r) => r.id),
+          unit: "count",
+          hadRows: rows.length > 0,
+        };
       }
-      const total = rows.reduce(
-        (sum, j) => sum + daysBetween(j.postedDate, j.filledDate as string),
-        0,
-      );
-      return { value: round1(total / rows.length), ids: ids(rows), unit: "days", hadRows: true };
-    }
-    default: {
-      const exhaustive: never = base;
-      throw new Error(`unhandled metric: ${String(exhaustive)}`);
+      case "open_reqs": {
+        const rows = data.jobs.filter(
+          (j) =>
+            j.status === "open" &&
+            familyPasses(j.jobFamilyId, f.family) &&
+            bandPasses(j.bandId, f.band),
+        );
+        return {
+          value: rows.length,
+          ids: rows.map((r) => r.id),
+          unit: "count",
+          hadRows: rows.length > 0,
+        };
+      }
+      case "headcount": {
+        const rows = data.employees.filter(
+          (e) => e.active && familyPasses(e.jobFamilyId, f.family) && bandPasses(e.bandId, f.band),
+        );
+        return {
+          value: rows.length,
+          ids: rows.map((r) => r.id),
+          unit: "count",
+          hadRows: rows.length > 0,
+        };
+      }
+      case "avg_time_to_fill": {
+        const rows = data.jobs.filter(
+          (j) =>
+            j.status === "filled" &&
+            j.filledDate !== null &&
+            familyPasses(j.jobFamilyId, f.family) &&
+            bandPasses(j.bandId, f.band) &&
+            withinRange(j.filledDate, dateRange),
+        );
+        if (rows.length === 0) return { value: 0, ids: [], unit: "days", hadRows: false };
+        const total = rows.reduce(
+          (sum, j) => sum + daysBetween(j.postedDate, j.filledDate as string),
+          0,
+        );
+        return {
+          value: round1(total / rows.length),
+          ids: rows.map((r) => r.id),
+          unit: "days",
+          hadRows: true,
+        };
+      }
+      default: {
+        const exhaustive: never = base;
+        throw new Error(`unhandled metric: ${String(exhaustive)}`);
+      }
     }
   }
-}
 
-function ids(rows: ReadonlyArray<{ id: string }>): string[] {
-  return rows.map((r) => r.id);
-}
+  const citationFields = fieldsFor(plan.base, appliedFilters, plan.groupBy);
 
-// --- Scalar / grouped assembly ---------------------------------------
-
-function computeScalar(
-  base: BaseMetric,
-  filters: Filters,
-  metric: Metric,
-): ScalarAnswer | ExecutorFailure {
-  const { value, ids: recordIds, unit, hadRows } = computeBase(base, filters);
-  if (!hadRows) {
-    return {
-      ok: false,
-      reason: "no_matching_records",
-      message:
-        base === "avg_time_to_fill"
+  // --- scalar --------------------------------------------------------
+  if (!plan.groupBy) {
+    const { value, ids, unit, hadRows } = computeBase(plan.base, {});
+    if (!hadRows) {
+      return fail(
+        "no_matching_records",
+        plan.base === "avg_time_to_fill"
           ? "No filled requisitions match this query, so there is no time-to-fill to average."
           : "No records match this query.",
-      appliedFilters: filters,
+      );
+    }
+    return {
+      ok: true,
+      kind: "scalar",
+      metric,
+      value,
+      unit,
+      appliedFilters,
+      scope: orgScope,
+      citations: { recordIds: ids, fields: citationFields },
     };
   }
-  return {
-    ok: true,
-    kind: "scalar",
-    metric,
-    value,
-    unit,
-    appliedFilters: filters,
-    citations: { recordIds, fields: fieldsFor(base, filters) },
-  };
-}
 
-function computeGrouped(
-  base: CountMetric,
-  groupBy: GroupByField,
-  filters: Filters,
-  metric: Metric,
-): GroupedAnswer | ExecutorFailure {
+  // --- grouped (count metrics only) -------------------------------
+  const base = plan.base as CountMetric;
   const groups: GroupBucket[] = [];
   const recordIds: string[] = [];
 
-  if (groupBy === "band") {
-    const keys: BandName[] = filters.band ? [filters.band] : bandsBySeniority();
+  if (plan.groupBy === "band") {
+    const keys: BandName[] = queryIR.filters.band ? [queryIR.filters.band] : bandsBySeniority;
     for (const key of keys) {
-      const result = computeBase(base, { ...filters, band: key });
-      groups.push({ key, value: result.value });
-      recordIds.push(...result.ids);
+      const r = computeBase(base, { band: key });
+      groups.push({ key, value: r.value });
+      recordIds.push(...r.ids);
     }
   } else {
-    const keys: FamilyName[] = filters.jobFamily ? [filters.jobFamily] : [...JOB_FAMILIES];
+    const keys: FamilyName[] = effectiveJobFamily
+      ? [effectiveJobFamily]
+      : (allowedFamilies ?? [...JOB_FAMILIES]);
     for (const key of keys) {
-      const result = computeBase(base, { ...filters, jobFamily: key });
-      groups.push({ key, value: result.value });
-      recordIds.push(...result.ids);
+      const r = computeBase(base, { family: key });
+      groups.push({ key, value: r.value });
+      recordIds.push(...r.ids);
     }
   }
 
-  const total = groups.reduce((sum, g) => sum + g.value, 0);
-  if (total === 0) {
-    return {
-      ok: false,
-      reason: "no_matching_records",
-      message: "No records match this query.",
-      appliedFilters: filters,
-    };
+  if (groups.reduce((sum, g) => sum + g.value, 0) === 0) {
+    return fail("no_matching_records", "No records match this query.");
   }
 
   return {
     ok: true,
     kind: "grouped",
     metric,
-    groupBy,
+    groupBy: plan.groupBy,
     groups,
     unit: "count",
-    appliedFilters: filters,
-    citations: { recordIds: [...new Set(recordIds)], fields: fieldsFor(base, filters, groupBy) },
+    appliedFilters,
+    scope: orgScope,
+    citations: { recordIds: [...new Set(recordIds)], fields: citationFields },
   };
-}
-
-// --- Public entrypoint ------------------------------------------------
-
-export function execute(queryIR: QueryIR, session: Session): ExecutorResult {
-  // 1. Role scoping — first, here, on every query.
-  const appliedFilters = scopeFilters(queryIR.filters, session);
-
-  // 2. Plan: normalize headcount_by_band, reject unsupported groupBy combos.
-  const plan = planQuery(queryIR);
-  if ("unsupported" in plan) {
-    return {
-      ok: false,
-      reason: "unsupported_filter_for_metric",
-      message: plan.unsupported,
-      appliedFilters,
-    };
-  }
-
-  // 3. Reject a dateRange on a point-in-time metric.
-  if (appliedFilters.dateRange && !ACCEPTS_DATE_RANGE[plan.base]) {
-    return {
-      ok: false,
-      reason: "unsupported_filter_for_metric",
-      message: `The "${queryIR.metric}" metric is a point-in-time snapshot and does not accept a date range.`,
-      appliedFilters,
-    };
-  }
-
-  const metric = reportMetric(queryIR, plan.base, plan.groupBy);
-
-  // 4. Compute.
-  if (plan.groupBy) {
-    if (plan.base === "avg_time_to_fill") {
-      // Unreachable: planQuery already rejects avg_time_to_fill + groupBy.
-      throw new Error("avg_time_to_fill cannot be grouped");
-    }
-    return computeGrouped(plan.base, plan.groupBy, appliedFilters, metric);
-  }
-  return computeScalar(plan.base, appliedFilters, metric);
 }

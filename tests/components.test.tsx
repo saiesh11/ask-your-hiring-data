@@ -23,6 +23,7 @@ const answered: AnsweredResponse = {
     fields: ["active", "jobFamilyId"],
     recordCount: 2,
   },
+  scope: "org_wide",
   chart: { kind: "single", unit: "count", label: "Headcount — Engineering", value: 10 },
   summary: "Headcount — Engineering: 10 (grounded in 2 records).",
 };
@@ -32,6 +33,7 @@ const refused: RefusedResponse = {
   stage: "model_refusal",
   reason: "out_of_scope",
   message: "I can only answer questions about this hiring dataset.",
+  scope: "org_wide",
 };
 
 describe("AnswerView", () => {
