@@ -1,4 +1,4 @@
-import { getDemoUserById, getJobFamilyById } from "@/lib/data";
+import { demoUsers, getDemoUserById, getJobFamilyById } from "@/lib/data";
 import type { JobFamily as JobFamilyName } from "@/lib/query-ir";
 
 /**
@@ -40,4 +40,25 @@ export function resolveSession(userId: string): Session {
     throw new Error(`Recruiter "${user.id}" has an unresolvable job family`);
   }
   return { userId: user.id, role: "recruiter", jobFamilyName: family.name };
+}
+
+export interface PublicDemoUser {
+  id: string;
+  displayName: string;
+  role: "recruiter" | "chro";
+  /** Human-readable data scope, for the login switcher. */
+  scope: string;
+}
+
+/** The demo accounts, shaped for the UI's "log in as" dropdown. */
+export function listDemoUsers(): PublicDemoUser[] {
+  return demoUsers.map((user) => {
+    const session = resolveSession(user.id);
+    return {
+      id: user.id,
+      displayName: user.displayName,
+      role: session.role,
+      scope: session.role === "chro" ? "Organization-wide" : `${session.jobFamilyName} only`,
+    };
+  });
 }

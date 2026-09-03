@@ -81,3 +81,16 @@ export const AskResponseSchema = z.discriminatedUnion("status", [AnsweredSchema,
 export type AskResponse = z.infer<typeof AskResponseSchema>;
 export type AnsweredResponse = z.infer<typeof AnsweredSchema>;
 export type RefusedResponse = z.infer<typeof RefusedSchema>;
+
+// --- GET /api/users (UI scaffolding for the "log in as" switcher) ------
+
+export const DemoUserPublicSchema = z.strictObject({
+  id: z.string(),
+  displayName: z.string(),
+  role: z.enum(["recruiter", "chro"]),
+  scope: z.string(),
+});
+export type DemoUserPublic = z.infer<typeof DemoUserPublicSchema>;
+
+export const UsersResponseSchema = z.strictObject({ users: z.array(DemoUserPublicSchema) });
+export type UsersResponse = z.infer<typeof UsersResponseSchema>;
