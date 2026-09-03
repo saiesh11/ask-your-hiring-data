@@ -18,10 +18,10 @@ function AnsweredView({ response }: { response: AnsweredResponse }) {
   const { citations } = response;
 
   return (
-    <div data-testid="answered">
-      <p className="mb-3 font-medium">{response.summary}</p>
-      <MetricChart chart={response.chart} />
-      <div className="mt-2 text-[13px] text-muted-foreground">
+    <div data-testid="answered" className="flex flex-col gap-3">
+      <p className="text-sm leading-relaxed font-medium">{response.summary}</p>
+      <MetricChart response={response} />
+      <div className="text-[13px] text-muted-foreground">
         <span data-testid="grounded-line">
           Grounded in {citations.recordCount} record{citations.recordCount === 1 ? "" : "s"}
         </span>

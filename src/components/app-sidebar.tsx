@@ -4,14 +4,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  Building2,
-  ChevronsUpDown,
-  LogOut,
-  MessageSquare,
-  Plus,
-  Settings,
-  Users,
-} from "lucide-react";
+  ChatIcon,
+  CloseIcon,
+  MembersIcon,
+  NewChatIcon,
+  OrgIcon,
+  SelectorIcon,
+  SettingsIcon,
+  SignOutIcon,
+} from "@/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +65,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={goNew}>
-              <Plus />
+              <NewChatIcon />
               <span>New chat</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -84,7 +85,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
                   isActive={onChat && c.id === activeId}
                   onClick={() => goSelect(c.id)}
                 >
-                  <MessageSquare />
+                  <ChatIcon />
                   <span className="truncate">{c.title}</span>
                 </SidebarMenuButton>
                 <SidebarMenuAction
@@ -92,7 +93,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
                   aria-label="Delete chat"
                   onClick={() => deleteConversation(c.id)}
                 >
-                  &times;
+                  <CloseIcon className="size-3.5" />
                 </SidebarMenuAction>
               </SidebarMenuItem>
             ))}
@@ -105,7 +106,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith("/app/members")}>
               <Link href="/app/members">
-                <Users />
+                <MembersIcon />
                 <span>Members</span>
               </Link>
             </SidebarMenuButton>
@@ -113,7 +114,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith("/app/settings")}>
               <Link href="/app/settings">
-                <Settings />
+                <SettingsIcon />
                 <span>Settings</span>
               </Link>
             </SidebarMenuButton>
@@ -122,14 +123,14 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
-                  <Building2 />
+                  <OrgIcon />
                   <div className="grid flex-1 text-left leading-tight">
                     <span className="truncate font-medium">{viewer.orgName}</span>
                     <span className="truncate text-xs text-sidebar-foreground/60">
                       {viewer.name} · {viewer.role}
                     </span>
                   </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
+                  <SelectorIcon className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-56">
@@ -138,7 +139,7 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => void signOut({ redirectTo: "/" })}>
-                  <LogOut />
+                  <SignOutIcon />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>

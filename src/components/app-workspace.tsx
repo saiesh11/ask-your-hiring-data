@@ -11,9 +11,11 @@ export function AppWorkspace({ viewer, children }: { viewer: SidebarViewer; chil
       <SidebarProvider>
         <AppSidebar viewer={viewer} />
         <SidebarInset className="h-dvh">
-          <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+          <header className="flex h-12 shrink-0 items-center gap-2 px-3">
             <SidebarTrigger />
-            <span className="text-sm font-medium">Ask Your Hiring Data</span>
+            <span className="font-mono text-xs tracking-wide text-muted-foreground">
+              ask your hiring data
+            </span>
           </header>
           <div className="min-h-0 flex-1">{children}</div>
         </SidebarInset>

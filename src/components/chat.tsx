@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SendHorizontal, Sparkles } from "lucide-react";
+import { SendIcon, SparkIcon } from "@/components/icons";
 import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AnswerView } from "./answer-view";
 import { useChatStore } from "./chat-store";
 
 const SUGGESTIONS = [
   "How many people are active across the company?",
-  "Show me headcount by band",
+  "Headcount by band",
   "Open requisitions by job family",
   "Average time to fill for Sales roles",
   "How many hires did we make in 2024?",
@@ -29,24 +28,28 @@ export function Chat() {
   const { activeTurns, appendTurn } = useChatStore();
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
-  const transcriptRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
   const empty = activeTurns.length === 0 && !pending;
 
   useEffect(() => {
-    const el = transcriptRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const toBottom = () => {
-      el.scrollTop = el.scrollHeight;
-    };
-    toBottom();
-    const raf = requestAnimationFrame(toBottom);
-    return () => cancelAnimationFrame(raf);
+    el.scrollTop = el.scrollHeight;
   }, [activeTurns, pending]);
+
+  function autosize() {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }
 
   async function ask(question: string) {
     const trimmed = question.trim();
     if (!trimmed || pending) return;
     setInput("");
+    requestAnimationFrame(autosize);
     appendTurn({ role: "user", text: trimmed });
     setPending(true);
     try {
@@ -73,46 +76,71 @@ export function Chat() {
     }
   }
 
-  const form = (
+  const composer = (
     <form
-      className="flex w-full gap-2"
+      className="w-full"
       onSubmit={(e) => {
         e.preventDefault();
         void ask(input);
       }}
     >
-      <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Ask about your hiring data…"
-        aria-label="Question"
-        className="h-11"
-      />
-      <Button type="submit" size="icon" className="h-11 w-11" disabled={pending || !input.trim()}>
-        <SendHorizontal />
-        <span className="sr-only">Ask</span>
-      </Button>
+      <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm transition-colors focus-within:border-ring">
+        <textarea
+          ref={taRef}
+          rows={1}
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            autosize();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void ask(input);
+            }
+          }}
+          placeholder="Ask about your hiring data…"
+          aria-label="Question"
+          className="max-h-[200px] min-h-[24px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+        />
+        <Button
+          type="submit"
+          size="icon"
+          className="size-9 shrink-0 rounded-xl"
+          disabled={pending || !input.trim()}
+        >
+          <SendIcon className="size-4" />
+          <span className="sr-only">Ask</span>
+        </Button>
+      </div>
     </form>
   );
 
   if (empty) {
     return (
-      <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center gap-6 px-4">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="rounded-full border p-2.5 text-muted-foreground">
-            <Sparkles className="size-5" />
-          </div>
-          <h1 className="text-xl font-semibold">Ask your hiring data</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-7 px-4">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="grid size-11 place-items-center rounded-2xl border bg-card text-primary">
+            <SparkIcon className="size-5" />
+          </span>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance">
+            Ask your hiring data
+          </h1>
+          <p className="max-w-sm text-sm text-muted-foreground">
             Plain-English questions. Grounded, role-scoped answers with a chart.
           </p>
         </div>
-        {form}
+        {composer}
         <div className="flex flex-wrap justify-center gap-2">
           {SUGGESTIONS.map((s) => (
-            <Button key={s} variant="outline" size="sm" onClick={() => ask(s)}>
+            <button
+              key={s}
+              type="button"
+              onClick={() => void ask(s)}
+              className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
               {s}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
@@ -120,20 +148,20 @@ export function Chat() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col px-4">
-      <div ref={transcriptRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto py-6">
+    <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto py-6">
         {activeTurns.map((turn, i) => (
-          <div key={i} className={turn.role === "user" ? "flex justify-end" : "flex"}>
+          <div key={i} className={turn.role === "user" ? "flex justify-end" : ""}>
             {turn.role === "user" ? (
-              <div className="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+              <div className="max-w-[80%] rounded-2xl bg-muted px-3.5 py-2 text-sm">
                 {turn.text}
               </div>
             ) : turn.role === "error" ? (
-              <div className="rounded-lg border border-destructive/50 px-3 py-2 text-sm text-destructive">
+              <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive">
                 {turn.text}
               </div>
             ) : (
-              <div className="w-full rounded-lg border p-3">
+              <div className="rounded-xl border bg-card p-4">
                 <AnswerView response={turn.response} />
               </div>
             )}
@@ -141,11 +169,11 @@ export function Chat() {
         ))}
         {pending && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="size-4 animate-pulse" /> Thinking…
+            <SparkIcon className="size-4 animate-pulse text-primary" /> Analyzing…
           </div>
         )}
       </div>
-      <div className="shrink-0 border-t bg-background py-3">{form}</div>
+      <div className="shrink-0 pt-2 pb-4">{composer}</div>
     </div>
   );
 }

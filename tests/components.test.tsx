@@ -74,7 +74,7 @@ describe("AnswerView", () => {
 describe("Chat", () => {
   it("shows suggestions in the empty state", () => {
     renderChat();
-    expect(screen.getByText("Show me headcount by band")).toBeInTheDocument();
+    expect(screen.getByText("Headcount by band")).toBeInTheDocument();
   });
 
   it("posts { question } and renders the answer", async () => {
