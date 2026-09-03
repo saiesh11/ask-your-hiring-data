@@ -44,3 +44,6 @@ yarn-error.log*
 # under the ignored .next/ dir, so it is intentionally not committed.
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma generated client
+/src/generated/

@@ -1,8 +1,157 @@
-// Connection URLs live in prisma.config.ts (Prisma 7). Models are added in S2.
+// Connection URLs live in prisma.config.ts (Prisma 7).
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth & tenancy
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  ADMIN
+  CHRO
+  RECRUITER
+  VIEWER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships Membership[]
+  invitesSent Invitation[] @relation("InvitedBy")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  // Deterministic seed for this org's synthetic hiring dataset.
+  dataSeed  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  invitations Invitation[]
+  jobFamilies JobFamily[]
+  bands       Band[]
+  employees   Employee[]
+  jobs        Job[]
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  userId         String
+  orgId          String
+  role           Role
+  // Job-family ids this member may see. Empty for org-wide roles
+  // (OWNER/ADMIN/CHRO); required non-empty for RECRUITER/VIEWER — enforced in
+  // src/lib/rbac + the executor.
+  jobFamilyScope String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+model Invitation {
+  id             String    @id @default(cuid())
+  orgId          String
+  email          String
+  role           Role
+  jobFamilyScope String[]  @default([])
+  token          String    @unique
+  invitedById    String
+  acceptedAt     DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invitedBy User         @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@unique([orgId, email])
+  @@index([orgId])
+}
+
+// ---------------------------------------------------------------------------
+// Per-organization hiring data (seeded on org creation)
+// ---------------------------------------------------------------------------
+
+enum JobStatus {
+  open
+  filled
+}
+
+model JobFamily {
+  id    String @id @default(cuid())
+  orgId String
+  name  String
+  slug  String
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  jobs      Job[]
+
+  @@unique([orgId, slug])
+  @@index([orgId])
+}
+
+model Band {
+  id    String @id @default(cuid())
+  orgId String
+  name  String
+  order Int
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  jobs      Job[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  orgId       String
+  jobFamilyId String
+  bandId      String
+  department  String
+  hireDate    DateTime @db.Date
+  active      Boolean
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  jobFamily JobFamily    @relation(fields: [jobFamilyId], references: [id], onDelete: Cascade)
+  band      Band         @relation(fields: [bandId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  orgId       String
+  jobFamilyId String
+  bandId      String
+  postedDate  DateTime  @db.Date
+  filledDate  DateTime? @db.Date
+  status      JobStatus
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  jobFamily JobFamily    @relation(fields: [jobFamilyId], references: [id], onDelete: Cascade)
+  band      Band         @relation(fields: [bandId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
 }
