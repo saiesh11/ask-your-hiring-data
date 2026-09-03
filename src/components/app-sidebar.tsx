@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  BarChartIcon,
   ChatIcon,
   CloseIcon,
   MembersIcon,
@@ -88,14 +87,6 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
             <SidebarMenuButton onClick={goNew}>
               <NewChatIcon />
               <span>New chat</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname.startsWith("/app/dashboard")}>
-              <Link href="/app/dashboard">
-                <BarChartIcon />
-                <span>Dashboard</span>
-              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
