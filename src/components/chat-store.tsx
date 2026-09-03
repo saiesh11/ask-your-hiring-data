@@ -30,6 +30,7 @@ interface ChatStore {
   newConversation: () => void;
   selectConversation: (id: string) => void;
   deleteConversation: (id: string) => void;
+  renameConversation: (id: string, title: string) => void;
   appendTurn: (turn: Turn) => void;
 }
 
@@ -78,6 +79,13 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
     setConversations((cs) => cs.filter((c) => c.id !== id));
     setActiveId((cur) => (cur === id ? null : cur));
   }, []);
+  const renameConversation = useCallback((id: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setConversations((cs) =>
+      cs.map((c) => (c.id === id ? { ...c, title: trimmed.slice(0, 80) } : c)),
+    );
+  }, []);
 
   const appendTurn = useCallback(
     (turn: Turn) => {
@@ -111,6 +119,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
       newConversation,
       selectConversation,
       deleteConversation,
+      renameConversation,
       appendTurn,
     }),
     [
@@ -120,6 +129,7 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
       newConversation,
       selectConversation,
       deleteConversation,
+      renameConversation,
       appendTurn,
     ],
   );

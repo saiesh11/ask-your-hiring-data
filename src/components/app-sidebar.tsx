@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -7,11 +8,14 @@ import {
   ChatIcon,
   CloseIcon,
   MembersIcon,
+  MoreIcon,
   NewChatIcon,
   OrgIcon,
+  RenameIcon,
   SelectorIcon,
   SettingsIcon,
   SignOutIcon,
+  SparkIcon,
 } from "@/components/icons";
 import {
   DropdownMenu,
@@ -32,7 +36,6 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "./chat-store";
 
@@ -46,8 +49,15 @@ export interface SidebarViewer {
 export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { conversations, activeId, newConversation, selectConversation, deleteConversation } =
-    useChatStore();
+  const {
+    conversations,
+    activeId,
+    newConversation,
+    selectConversation,
+    deleteConversation,
+    renameConversation,
+  } = useChatStore();
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const onChat = pathname === "/app";
 
   function goNew() {
@@ -58,10 +68,20 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
     selectConversation(id);
     if (!onChat) router.push("/app");
   }
+  function commitRename(id: string, value: string) {
+    renameConversation(id, value);
+    setRenamingId(null);
+  }
 
   return (
     <Sidebar>
       <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 pt-1.5 pb-1">
+          <span className="grid size-6 place-items-center rounded-md bg-primary/10 text-primary">
+            <SparkIcon className="size-3.5" />
+          </span>
+          <span className="font-mono text-xs tracking-wide">ask your hiring data</span>
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={goNew}>
@@ -81,20 +101,56 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
             )}
             {conversations.map((c) => (
               <SidebarMenuItem key={c.id}>
-                <SidebarMenuButton
-                  isActive={onChat && c.id === activeId}
-                  onClick={() => goSelect(c.id)}
-                >
-                  <ChatIcon />
-                  <span className="truncate">{c.title}</span>
-                </SidebarMenuButton>
-                <SidebarMenuAction
-                  showOnHover
-                  aria-label="Delete chat"
-                  onClick={() => deleteConversation(c.id)}
-                >
-                  <CloseIcon className="size-3.5" />
-                </SidebarMenuAction>
+                {renamingId === c.id ? (
+                  <form
+                    className="px-1 py-0.5"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      commitRename(c.id, new FormData(e.currentTarget).get("title") as string);
+                    }}
+                  >
+                    <input
+                      name="title"
+                      autoFocus
+                      defaultValue={c.title}
+                      onBlur={(e) => commitRename(c.id, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
+                      className="w-full rounded-md bg-sidebar-accent px-2 py-1 text-sm outline-none ring-1 ring-sidebar-ring"
+                    />
+                  </form>
+                ) : (
+                  <>
+                    <SidebarMenuButton
+                      isActive={onChat && c.id === activeId}
+                      onClick={() => goSelect(c.id)}
+                    >
+                      <ChatIcon />
+                      <span className="truncate">{c.title}</span>
+                    </SidebarMenuButton>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuAction showOnHover aria-label="Chat options">
+                          <MoreIcon />
+                        </SidebarMenuAction>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" className="w-40">
+                        <DropdownMenuItem onClick={() => setRenamingId(c.id)}>
+                          <RenameIcon />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => deleteConversation(c.id)}
+                        >
+                          <CloseIcon />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -147,8 +203,6 @@ export function AppSidebar({ viewer }: { viewer: SidebarViewer }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
-      <SidebarRail />
     </Sidebar>
   );
 }

@@ -1,21 +1,50 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import Link from "next/link";
+import { CollapseIcon, HomeIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar, type SidebarViewer } from "./app-sidebar";
 import { ChatStoreProvider } from "./chat-store";
+
+/** A pull-tab on the sidebar's edge that collapses / expands it. */
+function SidebarEdgeTab() {
+  const { toggleSidebar, state } = useSidebar();
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      aria-label={state === "collapsed" ? "Open sidebar" : "Close sidebar"}
+      className="absolute top-1/2 left-0 z-20 flex h-16 w-4 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+    >
+      <CollapseIcon
+        className={cn("size-3.5 transition-transform", state === "collapsed" && "rotate-180")}
+      />
+    </button>
+  );
+}
 
 export function AppWorkspace({ viewer, children }: { viewer: SidebarViewer; children: ReactNode }) {
   return (
     <ChatStoreProvider>
       <SidebarProvider>
         <AppSidebar viewer={viewer} />
-        <SidebarInset className="h-dvh">
-          <header className="flex h-12 shrink-0 items-center gap-2 px-3">
-            <SidebarTrigger />
-            <span className="font-mono text-xs tracking-wide text-muted-foreground">
-              ask your hiring data
-            </span>
+        <SidebarInset className="relative h-dvh">
+          <SidebarEdgeTab />
+          <header className="flex h-12 shrink-0 items-center px-3">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Link href="/">
+                <HomeIcon className="size-4" />
+                Home
+              </Link>
+            </Button>
           </header>
           <div className="min-h-0 flex-1">{children}</div>
         </SidebarInset>

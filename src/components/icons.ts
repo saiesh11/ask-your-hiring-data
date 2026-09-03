@@ -28,4 +28,8 @@ export {
   ArrowUp as ArrowUpIcon,
   ArrowDown as ArrowDownIcon,
   ArrowLeft as BackIcon,
+  ChevronLeft as CollapseIcon,
+  HomeLine as HomeIcon,
+  DotsHorizontal as MoreIcon,
+  Edit01 as RenameIcon,
 } from "@untitled-ui/icons-react";
