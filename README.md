@@ -14,6 +14,16 @@ answer.
 > It never executes anything. A separate, deterministic function is the only code path that
 > touches the dataset, and role scoping is enforced there — not in the prompt.
 
+## Documentation
+
+- **[SETUP.md](SETUP.md)** — step-by-step first run, with screenshots of every feature and
+  flowcharts.
+- **[docs/PROJECT-EXPLAINED.md](docs/PROJECT-EXPLAINED.md)** — the whole project in plain
+  language: every technology and why it's here, alternatives not chosen, problems hit during
+  the build, and an interview-style Q&A.
+- **[PROCESS.md](PROCESS.md)** — assumptions, what shipped vs. deferred, design decisions,
+  toolchain sharp edges.
+
 ## Branches
 
 - **`assessment-core`** (this branch) — matches the take-home brief exactly and runs from a
@@ -32,9 +42,9 @@ flowchart TD
     Provider["LLMProvider<br/>Mock | OpenAI · factory"]
     Registry["prompt-registry<br/>propose-query-ir@v1"]
     Schema["LlmProposalSchema.safeParse<br/>src/lib/query-ir"]
-    Scope["resolveScope ctx, ir.jobFamily<br/>the security boundary"]
-    Executor["execute ir, ctx, data<br/>deterministic · no AI"]
-    Data["InMemoryHiringDataSource<br/>validated fixtures"]
+    Scope["scopeFilters filters, session<br/>the security boundary"]
+    Executor["execute ir, session<br/>deterministic · no AI"]
+    Data["loader.ts<br/>validated JSON fixtures"]
 
     UI -->|"{ userId, question }"| Route --> Pipeline --> Provider
     Provider -. "system prompt by id" .-> Registry
@@ -48,7 +58,7 @@ flowchart TD
 - **`src/lib/query-ir`** — the closed, versioned Zod contract. `z.strictObject` everywhere, so
   an injected key is a hard parse error. Fixed metric menu: `hire_count`, `open_reqs`,
   `headcount`, `avg_time_to_fill`, `headcount_by_band`.
-- **`src/lib/executor`** — `execute(ir, context, data)`. Scope first, then metric, then
+- **`src/lib/executor`** — `execute(ir, session)`. `scopeFilters()` first, then metric, then
   citations; a distinct `no_matching_records` failure for "valid query, zero rows".
 - **`src/lib/llm`** — `LLMProvider` interface, deterministic `MockProvider`, real
   `OpenAIProvider` (auto-selected when `OPENAI_API_KEY` is set), a factory. Never called from
@@ -70,7 +80,7 @@ sequenceDiagram
     participant X as execute()
 
     U->>API: { userId, question }
-    API->>P: resolve principal → ExecutionContext
+    API->>P: resolveSession(userId) → Session
     P->>M: proposeQueryIR(question)
     M-->>P: raw JSON
     P->>V: safeParse(raw)
@@ -82,13 +92,13 @@ sequenceDiagram
         P-->>U: refused · stage = model_refusal
     else valid Query IR
         V-->>P: { metric, filters, groupBy? }
-        P->>X: execute(ir, context, data)
-        Note over X: resolveScope() FIRST,<br/>then compute + cite
+        P->>X: execute(ir, session)
+        Note over X: scopeFilters() FIRST,<br/>then compute + cite
         alt zero matching rows
             X-->>P: no_matching_records
             P-->>U: refused · stage = executor
         else
-            X-->>P: value + citations + scope
+            X-->>P: value + citations + appliedFilters
             P-->>U: answered (chart-ready, Zod-validated)
         end
     end
