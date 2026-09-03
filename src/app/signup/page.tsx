@@ -99,7 +99,7 @@ export default function SignupPage() {
 
       <div className="relative z-10 grid flex-1 lg:grid-cols-12">
         {/* LEFT — slim text, centred, with an inset divider */}
-        <aside className="relative hidden flex-col items-center justify-center bg-white/[0.025] px-10 backdrop-blur-xl after:absolute after:inset-y-14 after:right-0 after:w-px after:bg-white/10 after:content-[''] lg:col-span-4 lg:flex">
+        <aside className="relative hidden flex-col items-center justify-center px-10 after:absolute after:inset-y-14 after:right-0 after:w-px after:bg-white/10 after:content-[''] lg:col-span-4 lg:flex">
           <div className="flex w-full max-w-sm flex-col gap-8">
             <span className="grid size-11 place-items-center rounded-xl border bg-card text-primary">
               <SparkIcon className="size-5" />
