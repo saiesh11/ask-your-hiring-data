@@ -20,7 +20,8 @@ export default function LoginPage() {
       setError("Invalid email or password.");
       return;
     }
-    window.location.href = "/app";
+    const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+    window.location.href = callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/app";
   }
 
   return (

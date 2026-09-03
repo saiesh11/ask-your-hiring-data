@@ -42,3 +42,20 @@ export function analyticsScope(subject: AccessSubject): string[] | null {
   if (isOrgWide(subject.role)) return null;
   return subject.jobFamilyScope ?? [];
 }
+
+const RANK: Record<Role, number> = {
+  [Role.OWNER]: 4,
+  [Role.ADMIN]: 3,
+  [Role.CHRO]: 2,
+  [Role.RECRUITER]: 1,
+  [Role.VIEWER]: 1,
+};
+
+/**
+ * Whether `actor` may grant/assign `target` to another member. An actor can
+ * assign any role at or below their own rank. (Only OWNER/ADMIN reach here —
+ * `members:manage_roles` gates the call.)
+ */
+export function canAssignRole(actor: Role, target: Role): boolean {
+  return RANK[actor] >= RANK[target];
+}
