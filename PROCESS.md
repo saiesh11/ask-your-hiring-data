@@ -52,7 +52,7 @@ fixture file with this copy of the assessment, so:
 
 **Deferred**
 
-- Real auth / multi-tenancy / a database. (Taken further on the `main` branch as a hosted
+- Real auth / multi-tenancy / a database. (Taken further on the `saas-model` branch as a hosted
   product; this branch is the version that matches the brief and runs from a clean clone.)
 - A time dimension in the IR (`groupBy: "month"`, a `timeseries` chart kind) — `hire_count`
   takes a date range but can't be broken out by month yet.
