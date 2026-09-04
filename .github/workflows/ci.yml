@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [assessment-core, main]
+    branches: [assessment-core, saas-model]
   pull_request:
 
 concurrency:

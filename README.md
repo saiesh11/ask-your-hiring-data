@@ -14,22 +14,12 @@ answer.
 > It never executes anything. A separate, deterministic function is the only code path that
 > touches the dataset, and role scoping is enforced there — not in the prompt.
 
-## Documentation
-
-- **[SETUP.md](SETUP.md)** — step-by-step first run, with screenshots of every feature and
-  flowcharts.
-- **[docs/PROJECT-EXPLAINED.md](docs/PROJECT-EXPLAINED.md)** — the whole project in plain
-  language: every technology and why it's here, alternatives not chosen, problems hit during
-  the build, and an interview-style Q&A.
-- **[PROCESS.md](PROCESS.md)** — assumptions, what shipped vs. deferred, design decisions,
-  toolchain sharp edges.
-
 ## Branches
 
 - **`assessment-core`** (this branch) — matches the take-home brief exactly and runs from a
   clean clone with `pnpm install && pnpm dev`, no database, no secrets. Three demo principals
   (CHRO / two recruiters) via an in-UI switcher.
-- **`main`** — the same core taken further into a hosted multi-tenant product: real auth,
+- **`saas-model`** — the same core taken further into a hosted multi-tenant product: real auth,
   Postgres, per-org seeded datasets, a redesigned UI. Needs a database to run.
 
 ## Architecture
