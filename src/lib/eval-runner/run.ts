@@ -160,7 +160,9 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
   const observed =
     response.status === "answered"
       ? `answered ${response.metric} ${response.kind === "scalar" ? String(response.value) : stableStringify(response.groups)} scope=${stableStringify(response.scope)}`
-      : `refused ${response.stage}/${response.reason}`;
+      : response.status === "overview"
+        ? `overview [${response.sections.map((s) => s.metric).join(", ")}] scope=${stableStringify(response.scope)}`
+        : `refused ${response.stage}/${response.reason}`;
 
   return { id, question, userId, passed: failures.length === 0, failures, observed };
 }

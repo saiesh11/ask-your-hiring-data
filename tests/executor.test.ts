@@ -3,6 +3,7 @@ import { buildOrgDataset } from "@/lib/hiring-data";
 import type { QueryIR } from "@/lib/query-ir";
 import {
   execute,
+  executeOverview,
   ORG_WIDE,
   resolveScope,
   scopedTo,
@@ -244,5 +245,75 @@ describe("citations", () => {
       .map((j) => j.id);
     expect([...res.citations.recordIds].sort()).toEqual([...expectedIds].sort());
     expect(res.citations.fields).toEqual(expect.arrayContaining(["status", "jobFamilyId"]));
+  });
+});
+
+describe("executeOverview — the multi-metric path", () => {
+  const overview = (filters: QueryIR["filters"] = {}, ctx: ExecutionContext = ORG_WIDE) =>
+    executeOverview({ version: 1, overview: true, filters }, ctx, data);
+
+  it("composes one section per metric that has data, each grounded", () => {
+    const res = overview();
+    if (!res.ok) throw new Error(`expected an overview, got ${JSON.stringify(res)}`);
+    expect(res.kind).toBe("overview");
+    expect(res.sections.length).toBeGreaterThanOrEqual(4);
+    expect(res.sections.map((s) => s.metric)).toEqual(
+      expect.arrayContaining(["headcount", "headcount_by_band", "open_reqs"]),
+    );
+    for (const s of res.sections) {
+      expect(s.citations.recordIds.length).toBeGreaterThan(0);
+      expect(s.citations.fields.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("headcount section equals the standalone headcount query", () => {
+    const res = overview();
+    if (!res.ok) throw new Error("expected an overview");
+    const section = res.sections.find((s) => s.metric === "headcount");
+    expect(section?.kind === "scalar" && section.value).toBe(
+      asScalar(run(ir("headcount"), ORG_WIDE)).value,
+    );
+  });
+
+  it("a date range scopes the flow metrics but not the point-in-time ones", () => {
+    const range = { from: "2024-01-01", to: "2024-12-31" };
+    const res = overview({ dateRange: range });
+    if (!res.ok) throw new Error("expected an overview");
+    const headcount = res.sections.find((s) => s.metric === "headcount");
+    const hires = res.sections.find((s) => s.metric === "hire_count");
+    expect(headcount?.kind === "scalar" && headcount.value).toBe(
+      asScalar(run(ir("headcount"), ORG_WIDE)).value,
+    );
+    expect(hires?.kind === "scalar" && hires.value).toBe(
+      asScalar(run(ir("hire_count", { dateRange: range }), ORG_WIDE)).value,
+    );
+  });
+
+  it("a recruiter's overview is confined to their job family — every section", () => {
+    const res = overview({}, scopedTo(["Engineering"]));
+    if (!res.ok) throw new Error("expected an overview");
+    expect(res.scope).toEqual({ jobFamilies: ["Engineering"] });
+    for (const s of res.sections) {
+      expect(s.scope).toEqual({ jobFamilies: ["Engineering"] });
+    }
+    expect(res.sections.find((s) => s.metric === "open_reqs")?.kind).toBe("scalar");
+  });
+
+  it("a recruiter asking outside their scope is silently narrowed, not widened", () => {
+    const res = overview({ jobFamily: "Sales" }, scopedTo(["Engineering"]));
+    if (!res.ok) throw new Error("expected an overview");
+    expect(res.scope).toEqual({ jobFamilies: ["Engineering"] });
+    const headcount = res.sections.find((s) => s.metric === "headcount");
+    expect(headcount?.kind === "scalar" && headcount.value).toBe(
+      asScalar(run(ir("headcount", { jobFamily: "Engineering" }), ORG_WIDE)).value,
+    );
+  });
+
+  it("citations are the deduped union of every section's records", () => {
+    const res = overview();
+    if (!res.ok) throw new Error("expected an overview");
+    const union = new Set(res.sections.flatMap((s) => s.citations.recordIds));
+    expect(new Set(res.citations.recordIds)).toEqual(union);
+    expect(res.citations.recordIds.length).toBe(union.size);
   });
 });

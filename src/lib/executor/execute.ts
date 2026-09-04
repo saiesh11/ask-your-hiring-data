@@ -6,6 +6,7 @@ import {
   type GroupByField,
   type JobFamily as FamilyName,
   type Metric,
+  type OverviewIR,
   type QueryIR,
 } from "@/lib/query-ir";
 import type { OrgHiringData } from "@/lib/hiring-data";
@@ -64,6 +65,17 @@ export type ExecutorFailure = {
 };
 
 export type ExecutorResult = ScalarAnswer | GroupedAnswer | ExecutorFailure;
+
+export type OverviewAnswer = {
+  ok: true;
+  kind: "overview";
+  appliedFilters: Filters;
+  scope: OrgScope;
+  /** One entry per metric that had matching records, in a fixed reading order. */
+  sections: Array<ScalarAnswer | GroupedAnswer>;
+  /** Union of every section's cited records and read fields. */
+  citations: Citations;
+};
 
 // --- Metric capability matrix (documented in PROCESS.md) -------------------
 
@@ -343,5 +355,78 @@ export function execute(
     appliedFilters,
     scope: orgScope,
     citations: { recordIds: [...new Set(recordIds)], fields: citationFields },
+  };
+}
+
+/**
+ * The broad-question path: one call, every applicable metric, composed. It
+ * dispatches to {@link execute} once per metric, so role scoping (the
+ * `resolveScope` boundary) and every filter rule are enforced exactly as they
+ * are for a single query — a recruiter's overview can only ever cover their own
+ * job family.
+ *
+ * Point-in-time metrics (headcount, open reqs, headcount by band) drop any date
+ * range; the flow metrics (hire count, average time to fill) keep it. A metric
+ * with zero matching records is left out; an entirely empty result is a
+ * `no_matching_records` failure.
+ */
+export function executeOverview(
+  overviewIR: OverviewIR,
+  context: ExecutionContext,
+  data: OrgHiringData,
+): OverviewAnswer | ExecutorFailure {
+  const { jobFamily, band, dateRange } = overviewIR.filters;
+  const snapshot: Filters = {
+    ...(jobFamily ? { jobFamily } : {}),
+    ...(band ? { band } : {}),
+  };
+  const withDates: Filters = { ...snapshot, ...(dateRange ? { dateRange } : {}) };
+
+  const { allowedFamilies, effectiveJobFamily, orgScope } = resolveScope(context, jobFamily);
+  // A breakdown by family is only useful when more than one family is in play.
+  const singleFamily = effectiveJobFamily !== undefined || allowedFamilies?.length === 1;
+
+  const specs: QueryIR[] = [
+    { version: 1, metric: "headcount", filters: snapshot },
+    { version: 1, metric: "headcount_by_band", filters: snapshot },
+    singleFamily
+      ? { version: 1, metric: "open_reqs", filters: snapshot }
+      : { version: 1, metric: "open_reqs", filters: snapshot, groupBy: "jobFamily" },
+    { version: 1, metric: "hire_count", filters: withDates },
+    { version: 1, metric: "avg_time_to_fill", filters: withDates },
+  ];
+
+  const sections: Array<ScalarAnswer | GroupedAnswer> = [];
+  for (const spec of specs) {
+    const result = execute(spec, context, data);
+    if (result.ok) sections.push(result);
+  }
+
+  const appliedFilters: Filters = {
+    ...(effectiveJobFamily ? { jobFamily: effectiveJobFamily } : {}),
+    ...(band ? { band } : {}),
+    ...(dateRange ? { dateRange } : {}),
+  };
+
+  if (sections.length === 0) {
+    return {
+      ok: false,
+      reason: "no_matching_records",
+      message: "No records match this query.",
+      appliedFilters,
+      scope: orgScope,
+    };
+  }
+
+  return {
+    ok: true,
+    kind: "overview",
+    appliedFilters,
+    scope: orgScope,
+    sections,
+    citations: {
+      recordIds: [...new Set(sections.flatMap((s) => s.citations.recordIds))],
+      fields: [...new Set(sections.flatMap((s) => s.citations.fields))],
+    },
   };
 }

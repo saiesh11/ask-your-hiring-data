@@ -1,5 +1,5 @@
 import type { ZodError } from "zod";
-import { LlmProposalSchema, type QueryIR, type Refusal } from "./schema";
+import { LlmProposalSchema, type OverviewIR, type QueryIR, type Refusal } from "./schema";
 
 /**
  * The result of interpreting the provider's raw, untrusted output.
@@ -11,6 +11,7 @@ import { LlmProposalSchema, type QueryIR, type Refusal } from "./schema";
  */
 export type ProposalInterpretation =
   | { kind: "query_ir"; queryIR: QueryIR }
+  | { kind: "overview"; overviewIR: OverviewIR }
   | { kind: "refusal"; refusal: Refusal }
   | { kind: "invalid"; issues: string[] };
 
@@ -34,6 +35,9 @@ export function interpretLlmProposal(raw: unknown): ProposalInterpretation {
   }
   if ("refusal" in parsed.data) {
     return { kind: "refusal", refusal: parsed.data };
+  }
+  if ("overview" in parsed.data) {
+    return { kind: "overview", overviewIR: parsed.data };
   }
   return { kind: "query_ir", queryIR: parsed.data };
 }

@@ -121,8 +121,49 @@ describe("MockProvider — intent guards run BEFORE metric keywords", () => {
     expect(out).toMatchObject({ kind: "refusal", refusal: { reason: "unsupported_metric" } });
   });
 
-  it("a hiring question with no identifiable metric is refused as ambiguous", async () => {
+  it("a hiring question with no identifiable metric AND no breadth signal is ambiguous", async () => {
     const out = interpretLlmProposal(await propose("tell me about the team"));
     expect(out).toMatchObject({ kind: "refusal", refusal: { reason: "ambiguous" } });
+  });
+});
+
+describe("MockProvider — broad questions become an Overview, not one metric", () => {
+  const broad = [
+    "provide me the summary of this quarter hiring report",
+    "give me a hiring summary for 2024",
+    "how's hiring going?",
+    "what's the state of hiring",
+    "tell me about our hiring",
+    "show me the hiring dashboard",
+  ];
+  it.each(broad)("overview: %s", async (q) => {
+    const out = interpretLlmProposal(await propose(q));
+    expect(out.kind).toBe("overview");
+  });
+
+  it("carries the detected job family into the overview filters", async () => {
+    const out = interpretLlmProposal(await propose("how is hiring going in Sales?"));
+    expect(out.kind === "overview" && out.overviewIR.filters.jobFamily).toBe("Sales");
+  });
+
+  it("maps 'this year' to a concrete date range on the overview", async () => {
+    const out = interpretLlmProposal(await propose("summary of this year's hiring"));
+    const y = new Date().getUTCFullYear();
+    expect(out.kind === "overview" && out.overviewIR.filters.dateRange).toEqual({
+      from: `${y}-01-01`,
+      to: `${y}-12-31`,
+    });
+  });
+
+  it("a specific metric still wins over a breadth word ('summary of headcount')", async () => {
+    const out = interpretLlmProposal(await propose("give me a summary of headcount by band"));
+    expect(out.kind).toBe("query_ir");
+    if (out.kind === "query_ir") expect(out.queryIR.metric).toBe("headcount_by_band");
+  });
+
+  it("every overview proposal passes LlmProposalSchema", async () => {
+    for (const q of broad) {
+      expect(LlmProposalSchema.safeParse(await propose(q)).success, q).toBe(true);
+    }
   });
 });

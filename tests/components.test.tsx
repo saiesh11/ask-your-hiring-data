@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { AnswerView } from "@/components/answer-view";
 import { Chat } from "@/components/chat";
 import { ChatStoreProvider } from "@/components/chat-store";
-import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import type { AnsweredResponse, OverviewResponse, RefusedResponse } from "@/lib/api";
 
 const renderChat = () => render(<Chat />, { wrapper: ChatStoreProvider });
 
@@ -47,6 +47,42 @@ const refused: RefusedResponse = {
   scope: "org_wide",
 };
 
+const overview: OverviewResponse = {
+  status: "overview",
+  appliedFilters: {},
+  scope: "org_wide",
+  summary: "Hiring overview for the organization: headcount 49, hires 10.",
+  citations: {
+    recordIds: ["emp_0001", "job_0002"],
+    fields: ["active", "hireDate"],
+    recordCount: 2,
+  },
+  sections: [
+    {
+      metric: "headcount",
+      kind: "scalar",
+      value: 49,
+      unit: "count",
+      appliedFilters: {},
+      scope: "org_wide",
+      citations: { recordIds: ["emp_0001"], fields: ["active"], recordCount: 1 },
+      chart: { kind: "single", unit: "count", label: "Headcount", value: 49 },
+      summary: "Headcount: 49 (grounded in 1 record).",
+    },
+    {
+      metric: "hire_count",
+      kind: "scalar",
+      value: 10,
+      unit: "count",
+      appliedFilters: {},
+      scope: "org_wide",
+      citations: { recordIds: ["job_0002"], fields: ["hireDate"], recordCount: 1 },
+      chart: { kind: "single", unit: "count", label: "Hires", value: 10 },
+      summary: "Hires: 10 (grounded in 1 record).",
+    },
+  ],
+};
+
 describe("AnswerView", () => {
   it("renders a grounded answer: summary, chart, and the grounding line", () => {
     render(<AnswerView response={answered} />);
@@ -68,6 +104,25 @@ describe("AnswerView", () => {
     render(<AnswerView response={refused} />);
     expect(screen.getByTestId("refused")).toHaveTextContent(/hiring dataset/);
     expect(screen.getByText(/out of scope · model refusal/)).toBeInTheDocument();
+  });
+
+  it("renders an overview: top summary plus one grounded card per section", () => {
+    render(<AnswerView response={overview} />);
+    expect(screen.getByTestId("overview")).toBeInTheDocument();
+    expect(screen.getByText(/Hiring overview for the organization/)).toBeInTheDocument();
+    expect(screen.getByText(/Headcount: 49/)).toBeInTheDocument();
+    expect(screen.getByText(/Hires: 10/)).toBeInTheDocument();
+    expect(screen.getAllByTestId("metric-chart")).toHaveLength(2);
+    expect(screen.getByText(/across 2 metrics/)).toBeInTheDocument();
+  });
+
+  it("each overview section can toggle its own cited records", async () => {
+    const user = userEvent.setup();
+    render(<AnswerView response={overview} />);
+    const toggles = screen.getAllByRole("button", { name: /show records/i });
+    expect(toggles).toHaveLength(2);
+    await user.click(toggles[0]!);
+    expect(screen.getByText("emp_0001")).toBeInTheDocument();
   });
 });
 

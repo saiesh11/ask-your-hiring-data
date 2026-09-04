@@ -3,6 +3,7 @@ import {
   QUERY_IR_VERSION,
   METRICS,
   QueryIRSchema,
+  OverviewIRSchema,
   RefusalSchema,
   LlmProposalSchema,
   interpretLlmProposal,
@@ -210,5 +211,46 @@ describe("interpretLlmProposal", () => {
 
   it("QUERY_IR_VERSION is 1", () => {
     expect(QUERY_IR_VERSION).toBe(1);
+  });
+});
+
+describe("OverviewIRSchema — the broad-question proposal", () => {
+  it("accepts version + overview:true + filters", () => {
+    expect(OverviewIRSchema.safeParse({ version: 1, overview: true, filters: {} }).success).toBe(
+      true,
+    );
+    expect(
+      OverviewIRSchema.safeParse({
+        version: 1,
+        overview: true,
+        filters: { jobFamily: "Engineering", dateRange: { from: "2024-01-01", to: "2024-12-31" } },
+      }).success,
+    ).toBe(true);
+  });
+
+  const rejects: Array<[string, unknown]> = [
+    ["overview:false", { version: 1, overview: false, filters: {} }],
+    [
+      "a metric alongside overview",
+      { version: 1, overview: true, metric: "headcount", filters: {} },
+    ],
+    ["an injected key", { version: 1, overview: true, filters: {}, $where: "1=1" }],
+    ["missing filters", { version: 1, overview: true }],
+  ];
+  it.each(rejects)("rejects: %s", (_label, value) => {
+    expect(OverviewIRSchema.safeParse(value).success).toBe(false);
+  });
+
+  it("LlmProposalSchema routes it, and interpretLlmProposal returns kind 'overview'", () => {
+    const raw = { version: 1, overview: true, filters: { jobFamily: "Sales" } };
+    expect(LlmProposalSchema.safeParse(raw).success).toBe(true);
+    const out = interpretLlmProposal(raw);
+    expect(out.kind).toBe("overview");
+    if (out.kind === "overview") expect(out.overviewIR.filters.jobFamily).toBe("Sales");
+  });
+
+  it("an overview object with an extra key is invalid — never salvaged", () => {
+    const out = interpretLlmProposal({ version: 1, overview: true, filters: {}, extra: 1 });
+    expect(out.kind).toBe("invalid");
   });
 });

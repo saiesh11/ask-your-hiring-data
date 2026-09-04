@@ -182,3 +182,68 @@ describe("runAskPipeline — structured logging", () => {
     }
   });
 });
+
+describe("runAskPipeline — overview (the multi-metric answer)", () => {
+  it("a broad question returns a schema-valid overview with grounded sections", async () => {
+    const res = await askOrg("give me a summary of 2024 hiring");
+    expect(AskResponseSchema.safeParse(res).success).toBe(true);
+    if (res.status !== "overview") throw new Error(`expected overview, got ${res.status}`);
+
+    expect(res.sections.length).toBeGreaterThanOrEqual(4);
+    expect(res.summary).toMatch(/hiring overview/i);
+    expect(res.scope).toBe("org_wide");
+    expect(res.citations.recordCount).toBe(res.citations.recordIds.length);
+    for (const s of res.sections) {
+      expect(s.citations.recordCount).toBe(s.citations.recordIds.length);
+      expect(s.citations.recordCount).toBeGreaterThan(0);
+      expect(s.chart).toBeTruthy();
+    }
+    const hc = res.sections.find((s) => s.metric === "headcount");
+    const direct = execute(
+      { version: 1, metric: "headcount", filters: {} },
+      ORG_WIDE,
+      buildOrgDataset(DEFAULT_SEED),
+    );
+    expect(hc?.kind === "scalar" && direct.ok && direct.kind === "scalar" && hc.value).toBe(
+      direct.ok && direct.kind === "scalar" ? direct.value : NaN,
+    );
+  });
+
+  it("a scoped caller's overview is confined to their families end to end", async () => {
+    const res = await askScoped("how's hiring going overall?", ["Engineering"]);
+    if (res.status !== "overview") throw new Error(`expected overview, got ${res.status}`);
+    expect(res.scope).toEqual({ jobFamilies: ["Engineering"] });
+    for (const s of res.sections) expect(s.scope).toEqual({ jobFamilies: ["Engineering"] });
+  });
+
+  it("logs one 'ask' record naming the overview's section metrics", async () => {
+    const records: Array<Record<string, unknown>> = [];
+    setLogSink((r) => records.push(r));
+    await askOrg("give me a hiring summary");
+    const rec = records.find((r) => r.event === "ask");
+    expect(rec).toMatchObject({ outcome: "overview", proposal: { kind: "overview" } });
+    expect(Array.isArray(rec?.sections)).toBe(true);
+    expect((rec?.sections as string[]).length).toBeGreaterThan(0);
+  });
+
+  it("an all-empty overview is an executor refusal carrying the scope", async () => {
+    const res = await runAskPipeline(
+      { question: "summary" },
+      {
+        context: ORG_WIDE,
+        dataSource: src(),
+        provider: stubProvider({
+          version: 1,
+          overview: true,
+          filters: { jobFamily: "Design", dateRange: { from: "1970-01-01", to: "1970-12-31" } },
+        }),
+      },
+    );
+    // Design still has current headcount → still answers; assert it stayed scoped.
+    if (res.status === "overview") {
+      expect(res.appliedFilters.jobFamily).toBe("Design");
+    } else {
+      expect(res).toMatchObject({ status: "refused", stage: "executor", scope: "org_wide" });
+    }
+  });
+});

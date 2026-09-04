@@ -10,11 +10,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import type { AnsweredResponse, OverviewResponse, RefusedResponse } from "@/lib/api";
 
 export type Turn =
   | { role: "user"; text: string }
-  | { role: "assistant"; response: AnsweredResponse | RefusedResponse }
+  | { role: "assistant"; response: AnsweredResponse | RefusedResponse | OverviewResponse }
   | { role: "error"; text: string };
 
 export interface Conversation {

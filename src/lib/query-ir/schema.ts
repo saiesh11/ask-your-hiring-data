@@ -68,6 +68,19 @@ export const QueryIRSchema = z.strictObject({
   groupBy: z.enum(GROUP_BY_FIELDS).optional(),
 });
 
+/**
+ * A broad "give me the whole picture" request — the model's answer to a
+ * question that isn't about one metric ("how's hiring going?", "summary of the
+ * year"). It carries the same closed `filters` shape as a Query IR; the
+ * executor runs every applicable metric under those filters and composes the
+ * sections. Still `z.strictObject`: no free-form fields.
+ */
+export const OverviewIRSchema = z.strictObject({
+  version: z.literal(QUERY_IR_VERSION),
+  overview: z.literal(true),
+  filters: FiltersSchema,
+});
+
 export const RefusalSchema = z.strictObject({
   refusal: z.literal(true),
   reason: z.enum(REFUSAL_REASONS),
@@ -75,16 +88,17 @@ export const RefusalSchema = z.strictObject({
 });
 
 /**
- * The union the raw LLM output is parsed against. `.strict()` on both members
+ * The union the raw LLM output is parsed against. `.strict()` on every member
  * means a value can satisfy at most one of them. Anything that fails this — a
  * non-JSON scalar, a bare SQL string, an object with one extra key — is a hard
  * failure that MUST be treated as a refusal upstream. It is never coerced,
  * repaired, or partially salvaged.
  */
-export const LlmProposalSchema = z.union([QueryIRSchema, RefusalSchema]);
+export const LlmProposalSchema = z.union([QueryIRSchema, OverviewIRSchema, RefusalSchema]);
 
 export type DateRange = z.infer<typeof DateRangeSchema>;
 export type Filters = z.infer<typeof FiltersSchema>;
 export type QueryIR = z.infer<typeof QueryIRSchema>;
+export type OverviewIR = z.infer<typeof OverviewIRSchema>;
 export type Refusal = z.infer<typeof RefusalSchema>;
 export type LlmProposal = z.infer<typeof LlmProposalSchema>;

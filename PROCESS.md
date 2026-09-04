@@ -60,10 +60,9 @@ So this is two layers:
 
 ## Deliberately deferred
 
-- **A pre-built dashboard.** Prototyped, then removed on purpose — the product's thesis is that
-  you _ask_ instead of reading a standing dashboard. An open-ended "Explore" mode (choose a
-  metric and a breakdown, get the matching view alongside the underlying rows) is the right
-  version of that idea and the natural next build.
+- **A standing, always-on dashboard page.** Prototyped, then removed on purpose — the product's
+  thesis is that you _ask_. Saved / pinned answers a user can return to without re-asking are a
+  contained next step.
 - **A time dimension in the IR.** `hire_count` accepts a date range but the model can't ask for
   "hires by month". A `groupBy: "month"` and a `timeseries` chart kind is a contained addition.
 - **Invitation email delivery.** Invitations are created with a token; there's no mailer, so the
@@ -184,10 +183,10 @@ The credentials `authorize()` uses `z.object` (not `z.strictObject`) on purpose:
 
 ## With two more weeks
 
-1. **Explore mode** — the "ask, don't dashboard" answer to wanting a dashboard: choose a metric
-   and a breakdown, get the right visual plus the underlying rows, all through the same executor.
-2. **Time in the IR** — `groupBy: "month"`, a `timeseries` chart kind, and hire-trend / req-aging
+1. **Time in the IR** — `groupBy: "month"`, a `timeseries` chart kind, and hire-trend / req-aging
    as first-class answers.
+2. **Saved answers** — pin an answer to a lightweight home view so it can be revisited without
+   re-asking, still recomputed through the same executor on each load.
 3. **Streaming** the pipeline (IR proposal → executing → grounded answer) so the reasoning is
    visible, and showing the proposed IR in the UI as a "here's what I understood" affordance.
 4. **Invitation emails**, org switching, an audit log of every analytics query (who asked what,

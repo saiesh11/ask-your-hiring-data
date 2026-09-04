@@ -63,8 +63,8 @@ export const REFUSAL_RESPONSE_REASONS = [
 /** Where in the pipeline the refusal originated. */
 export const REFUSAL_STAGES = ["schema_validation", "model_refusal", "executor"] as const;
 
-const AnsweredSchema = z.strictObject({
-  status: z.literal("answered"),
+/** The grounded body of one answer — shared by a solo answer and an overview section. */
+const answerBody = {
   metric: z.enum(METRICS),
   kind: z.enum(["scalar", "grouped"]),
   value: z.number().optional(),
@@ -75,7 +75,10 @@ const AnsweredSchema = z.strictObject({
   citations: CitationsSchema,
   chart: ChartPayloadSchema,
   summary: z.string(),
-});
+} as const;
+
+const AnswerBodySchema = z.strictObject(answerBody);
+const AnsweredSchema = z.strictObject({ status: z.literal("answered"), ...answerBody });
 
 const RefusedSchema = z.strictObject({
   status: z.literal("refused"),
@@ -87,7 +90,27 @@ const RefusedSchema = z.strictObject({
   appliedFilters: FiltersSchema.optional(),
 });
 
-export const AskResponseSchema = z.discriminatedUnion("status", [AnsweredSchema, RefusedSchema]);
+/**
+ * The multi-metric answer to a broad question. Each section is a full grounded
+ * answer (its own value/groups, chart, and citations); the top level carries a
+ * one-line summary and the union of every section's citations.
+ */
+const OverviewSchema = z.strictObject({
+  status: z.literal("overview"),
+  appliedFilters: FiltersSchema,
+  scope: OrgScopeSchema,
+  sections: z.array(AnswerBodySchema).min(1),
+  citations: CitationsSchema,
+  summary: z.string(),
+});
+
+export const AskResponseSchema = z.discriminatedUnion("status", [
+  AnsweredSchema,
+  RefusedSchema,
+  OverviewSchema,
+]);
 export type AskResponse = z.infer<typeof AskResponseSchema>;
 export type AnsweredResponse = z.infer<typeof AnsweredSchema>;
 export type RefusedResponse = z.infer<typeof RefusedSchema>;
+export type OverviewResponse = z.infer<typeof OverviewSchema>;
+export type OverviewSection = z.infer<typeof AnswerBodySchema>;
