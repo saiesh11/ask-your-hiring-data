@@ -114,6 +114,14 @@ the `MockProvider` so the gate is deterministic and free.
    logging regression is also caught.
 5. Property-based tests for the executor (random valid IR + random dataset ⇒ invariants: scope
    never widens, citation count matches the row count).
+6. **LLM observability & prompt-ops (Langfuse or similar).** Point the `logger` sink at it so
+   every `ask` becomes a searchable trace with token cost and per-span timing; host the
+   `propose-query-ir` prompt so it can be versioned and A/B-tested against live traffic; run the
+   eval set as a tracked dataset so a real-model quality regression surfaces as a number, not a
+   bug report. Left out now — it needs a hosted account or a self-hosted server, and §4 of the
+   brief puts it out of scope — but `prompt-registry`, the single log sink, and the shared
+   `runAskPipeline` are already placed for a contained drop-in (LangSmith / Helicone are
+   comparable).
 
 ## Running the tests and the eval suite
 
