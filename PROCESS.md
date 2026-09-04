@@ -193,3 +193,11 @@ The credentials `authorize()` uses `z.object` (not `z.strictObject`) on purpose:
    what scope resolved, how many rows), and per-org rate limiting.
 5. **A Playwright suite** covering signup → seed → ask → refuse → scope, and a GitHub Actions
    job that spins up Postgres and runs the `RUN_DB_TESTS=1` set.
+6. **LLM observability & prompt-ops (Langfuse or similar).** Point the `logger` sink at it so
+   every `ask` becomes a searchable trace with token cost and per-span timing; host the
+   `propose-query-ir` prompt so it can be versioned and A/B-tested against live traffic; run the
+   eval set as a tracked dataset so a real-model quality regression surfaces as a number, not a
+   bug report. Left out now — it needs a hosted account or a self-hosted server, and §4 of the
+   brief puts it out of scope — but `prompt-registry`, the single log sink, and the shared
+   `runAskPipeline` are already placed for a contained drop-in (LangSmith / Helicone are
+   comparable).
