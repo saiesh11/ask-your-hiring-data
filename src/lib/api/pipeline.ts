@@ -1,8 +1,8 @@
-import { execute, resolveSession, UnknownUserError } from "@/lib/executor";
+import { execute, executeOverview, resolveSession, UnknownUserError } from "@/lib/executor";
 import { getLlmProvider, type LLMProvider } from "@/lib/llm";
 import { logger } from "@/lib/observability";
 import { interpretLlmProposal } from "@/lib/query-ir";
-import { toAnsweredResponse } from "./present";
+import { toAnsweredResponse, toOverviewResponse } from "./present";
 import { AskRequestSchema, AskResponseSchema, type AskResponse } from "./schema";
 
 /**
@@ -84,9 +84,11 @@ export async function runAskPipeline(
           metric: interpretation.queryIR.metric,
           groupBy: interpretation.queryIR.groupBy ?? null,
         }
-      : interpretation.kind === "refusal"
-        ? { kind: "refusal", reason: interpretation.refusal.reason }
-        : { kind: "invalid", issues: interpretation.issues };
+      : interpretation.kind === "overview"
+        ? { kind: "overview", filters: interpretation.overviewIR.filters }
+        : interpretation.kind === "refusal"
+          ? { kind: "refusal", reason: interpretation.refusal.reason }
+          : { kind: "invalid", issues: interpretation.issues };
 
   const finish = (response: AskResponse): AskResponse => {
     const validated = AskResponseSchema.parse(response); // never ship a malformed response
@@ -99,11 +101,17 @@ export async function runAskPipeline(
       outcome: validated.status,
       ...(validated.status === "refused"
         ? { stage: validated.stage, reason: validated.reason }
-        : {
-            metric: validated.metric,
-            appliedFilters: validated.appliedFilters,
-            recordCount: validated.citations.recordCount,
-          }),
+        : validated.status === "overview"
+          ? {
+              sections: validated.sections.map((s) => s.metric),
+              appliedFilters: validated.appliedFilters,
+              recordCount: validated.citations.recordCount,
+            }
+          : {
+              metric: validated.metric,
+              appliedFilters: validated.appliedFilters,
+              recordCount: validated.citations.recordCount,
+            }),
       ms: Date.now() - startedAt,
     });
     return validated;
@@ -125,6 +133,20 @@ export async function runAskPipeline(
       reason: interpretation.refusal.reason,
       message: interpretation.refusal.message,
     });
+  }
+
+  if (interpretation.kind === "overview") {
+    const overview = executeOverview(interpretation.overviewIR, session);
+    if (!overview.ok) {
+      return finish({
+        status: "refused",
+        stage: "executor",
+        reason: overview.reason,
+        message: overview.message,
+        appliedFilters: overview.appliedFilters,
+      });
+    }
+    return finish(toOverviewResponse(overview));
   }
 
   const result = execute(interpretation.queryIR, session);

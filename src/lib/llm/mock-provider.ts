@@ -5,6 +5,7 @@ import {
   type GroupByField,
   type JobFamily,
   type Metric,
+  type OverviewIR,
   type QueryIR,
   type Refusal,
 } from "@/lib/query-ir";
@@ -36,6 +37,11 @@ const OFF_TOPIC =
 
 const UNSUPPORTED_METRIC =
   /\b(median|percentile|trend|over\s+time|month[- ]over[- ]month|year[- ]over[- ]year|forecast|project(ion|ed)?|ratio|per\s+cent|percentage|attrition|turnover|retention\s+rate|offer\s+acceptance|pipeline\s+conversion|cost\s+per\s+hire|diversity)\b/;
+
+// A broad "the whole picture" request — not one metric. Answered by running
+// every applicable metric under the detected filters and composing sections.
+const OVERVIEW_INTENT =
+  /\b(summary|overview|recap|rundown|round[- ]?up|snapshot|dashboard|hiring report|recruiting report|full picture|big picture|state of (hiring|recruiting|things)|how(?:'?s| is| are)\s+(?:our\s+)?(hiring|recruiting|things|we)\s+(doing|going|looking|tracking)|everything (that )?(happened|going on)|all (?:the |our )?(metrics|numbers|stats|figures|hiring data)|tell me about (?:our|the)\s+(hiring|recruiting|quarter|year))\b/;
 
 // --- domain vocabulary --------------------------------------------------
 
@@ -132,6 +138,15 @@ const MONTH_END: Record<string, string> = {
 };
 
 function detectDateRange(q: string): { from: string; to: string } | undefined {
+  // Relative years, resolved against the current date.
+  const thisYear = new Date().getUTCFullYear();
+  if (/\b(this|current)\s+(calendar\s+)?year\b/.test(q)) {
+    return { from: `${thisYear}-01-01`, to: `${thisYear}-12-31` };
+  }
+  if (/\b(last|previous|prior)\s+year\b/.test(q)) {
+    return { from: `${thisYear - 1}-01-01`, to: `${thisYear - 1}-12-31` };
+  }
+
   const explicit = q.match(
     /(\d{4}-\d{2}-\d{2})\s*(?:to|and|through|-|–|until)\s*(\d{4}-\d{2}-\d{2})/,
   );
@@ -162,7 +177,7 @@ function refusal(reason: Refusal["reason"], message: string): Refusal {
   return { refusal: true, reason, message };
 }
 
-function interpret(question: string): QueryIR | Refusal {
+function interpret(question: string): QueryIR | OverviewIR | Refusal {
   const q = ` ${question.toLowerCase().trim()} `;
 
   // 1. Any write / destructive intent — read-only tool, checked before metrics.
@@ -188,16 +203,8 @@ function interpret(question: string): QueryIR | Refusal {
 
   // 4. Pick a metric.
   const metric = detectMetric(q);
-  if (!metric) {
-    return HIRING_TERMS.test(q)
-      ? refusal(
-          "ambiguous",
-          "Please ask about a specific metric: hire count, open reqs, headcount, average time to fill, or headcount by band.",
-        )
-      : refusal("out_of_scope", "I can only answer questions about this hiring dataset.");
-  }
 
-  // 5. Filters + groupBy.
+  // 5. Filters (shared by a single-metric query and an overview).
   const filters: Filters = {};
   const jobFamily = detectJobFamily(q);
   if (jobFamily) filters.jobFamily = jobFamily;
@@ -206,8 +213,22 @@ function interpret(question: string): QueryIR | Refusal {
   const dateRange = detectDateRange(q);
   if (dateRange) filters.dateRange = dateRange;
 
-  const groupBy = detectGroupBy(q);
+  // 6. No single metric: a broad "whole picture" question becomes an overview;
+  //    a vague hiring question with no breadth signal is still ambiguous.
+  if (!metric) {
+    if (OVERVIEW_INTENT.test(q)) {
+      return { version: 1, overview: true, filters };
+    }
+    return HIRING_TERMS.test(q)
+      ? refusal(
+          "ambiguous",
+          "Please ask about a specific metric: hire count, open reqs, headcount, average time to fill, or headcount by band. Or ask for a summary to see them all.",
+        )
+      : refusal("out_of_scope", "I can only answer questions about this hiring dataset.");
+  }
 
+  // 7. Single-metric query.
+  const groupBy = detectGroupBy(q);
   const ir: QueryIR = { version: 1, metric, filters };
   if (groupBy && metric !== "headcount_by_band") ir.groupBy = groupBy;
   return ir;

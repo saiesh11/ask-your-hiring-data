@@ -1,6 +1,12 @@
-import type { GroupedAnswer, ScalarAnswer } from "@/lib/executor";
+import type { GroupedAnswer, OverviewAnswer, ScalarAnswer } from "@/lib/executor";
 import type { Filters, Metric } from "@/lib/query-ir";
-import type { AnsweredResponse, ChartPayload, Citations } from "./schema";
+import type {
+  AnsweredResponse,
+  ChartPayload,
+  Citations,
+  OverviewResponse,
+  OverviewSection,
+} from "./schema";
 
 /**
  * Turns a deterministic executor answer into the grounded, chart-ready response
@@ -31,7 +37,8 @@ function valuePhrase(unit: "count" | "days", value: number): string {
   return unit === "days" ? plural(value, "day") : String(value);
 }
 
-export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): AnsweredResponse {
+/** The grounded body of one answer — no `status`, so it serves a section too. */
+function presentAnswer(answer: ScalarAnswer | GroupedAnswer): OverviewSection {
   const label = `${METRIC_LABELS[answer.metric]}${filterSuffix(answer.appliedFilters)}`;
   const citations: Citations = {
     recordIds: answer.citations.recordIds,
@@ -41,14 +48,8 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
   const grounded = `grounded in ${plural(citations.recordCount, "record")}`;
 
   if (answer.kind === "scalar") {
-    const chart: ChartPayload = {
-      kind: "single",
-      unit: answer.unit,
-      label,
-      value: answer.value,
-    };
+    const chart: ChartPayload = { kind: "single", unit: answer.unit, label, value: answer.value };
     return {
-      status: "answered",
       metric: answer.metric,
       kind: "scalar",
       value: answer.value,
@@ -66,7 +67,6 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
     series: answer.groups.map((group) => ({ label: group.key, value: group.value })),
   };
   return {
-    status: "answered",
     metric: answer.metric,
     kind: "grouped",
     groups: answer.groups,
@@ -75,5 +75,40 @@ export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): Answer
     citations,
     chart,
     summary: `${label}: ${answer.groups.map((g) => `${g.key} ${g.value}`).join(", ")} (${grounded}).`,
+  };
+}
+
+export function toAnsweredResponse(answer: ScalarAnswer | GroupedAnswer): AnsweredResponse {
+  return { status: "answered", ...presentAnswer(answer) };
+}
+
+export function toOverviewResponse(overview: OverviewAnswer): OverviewResponse {
+  const sections = overview.sections.map(presentAnswer);
+  const { jobFamily, band, dateRange } = overview.appliedFilters;
+
+  const qualifiers: string[] = [];
+  if (band) qualifiers.push(`${band} band`);
+  if (dateRange) qualifiers.push(`${dateRange.from} to ${dateRange.to}`);
+  const scope =
+    (jobFamily ?? "the organization") + (qualifiers.length ? ` (${qualifiers.join(", ")})` : "");
+
+  const headline = sections
+    .map((s) =>
+      s.kind === "scalar"
+        ? `${METRIC_LABELS[s.metric].toLowerCase()} ${valuePhrase(s.unit, s.value ?? 0)}`
+        : `${METRIC_LABELS[s.metric].toLowerCase()} across ${s.groups?.length ?? 0} groups`,
+    )
+    .join(", ");
+
+  return {
+    status: "overview",
+    appliedFilters: overview.appliedFilters,
+    sections,
+    citations: {
+      recordIds: overview.citations.recordIds,
+      fields: overview.citations.fields,
+      recordCount: overview.citations.recordIds.length,
+    },
+    summary: `Hiring overview for ${scope}: ${headline}.`,
   };
 }

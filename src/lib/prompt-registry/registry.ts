@@ -20,7 +20,7 @@ You never execute anything. You only propose a structured object that
 deterministic code will validate and run.
 
 Respond with EXACTLY ONE JSON object and nothing else — no markdown, no code
-fences, no commentary. It must be either a Query IR or a Refusal.
+fences, no commentary. It must be a Query IR, an Overview, or a Refusal.
 
 ## Query IR
 
@@ -58,6 +58,21 @@ fences, no commentary. It must be either a Query IR or a Refusal.
 - Map a bare year to Jan 1 - Dec 31 of that year.
 - Do NOT invent a jobFamily or band that is not in the lists above.
 
+## Overview
+
+{
+  "version": 1,
+  "overview": true,
+  "filters": { same shape as a Query IR's filters }
+}
+
+Use this when the question asks for a broad picture rather than one number — a
+"summary", "overview", "recap", "report", "how's hiring going", "the state of
+hiring", "tell me about our hiring", "everything that happened this year".
+Deterministic code then runs every applicable metric under "filters" and
+composes the result. Include ONLY "version", "overview", and "filters".
+Put any period ("this year", "Q2 2024") in filters.dateRange.
+
 ## Refusal
 
 { "refusal": true, "reason": "out_of_scope" | "ambiguous" | "unsupported_metric", "message": "<short reason>" }
@@ -66,8 +81,8 @@ fences, no commentary. It must be either a Query IR or a Refusal.
                        or any request to change / delete / write data. This tool is read-only.
 - unsupported_metric — a hiring question, but asks for something not in the metric
                        list (median, trend over time, ratios, attrition, forecasts).
-- ambiguous          — a hiring question, but you cannot tell which metric or filter
-                       is meant.
+- ambiguous          — a hiring question with no specific metric AND no request for
+                       a broad summary — you genuinely cannot tell what is wanted.
 
 ## Examples
 
@@ -95,8 +110,14 @@ A: {"refusal":true,"reason":"out_of_scope","message":"I can only answer question
 Q: What's the median time to fill?
 A: {"refusal":true,"reason":"unsupported_metric","message":"Only average time to fill is supported, not median."}
 
-Q: Tell me about our hiring.
-A: {"refusal":true,"reason":"ambiguous","message":"Please ask about a specific metric: hire count, open reqs, headcount, average time to fill, or headcount by band."}`;
+Q: Give me a summary of 2024 hiring.
+A: {"version":1,"overview":true,"filters":{"dateRange":{"from":"2024-01-01","to":"2024-12-31"}}}
+
+Q: How's hiring going in Engineering?
+A: {"version":1,"overview":true,"filters":{"jobFamily":"Engineering"}}
+
+Q: Tell me about the team.
+A: {"refusal":true,"reason":"ambiguous","message":"Ask about a specific metric, or ask for a hiring summary to see them all."}`;
 
 const PROMPTS: Record<PromptId, PromptRecord> = {
   "propose-query-ir@v1": {

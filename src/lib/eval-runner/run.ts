@@ -140,7 +140,9 @@ export async function runEvalCase(evalCase: EvalCase): Promise<EvalCaseResult> {
   const observed =
     response.status === "answered"
       ? `answered ${response.metric} ${response.kind === "scalar" ? String(response.value) : stableStringify(response.groups)} filters=${stableStringify(response.appliedFilters)}`
-      : `refused ${response.stage}/${response.reason}`;
+      : response.status === "overview"
+        ? `overview [${response.sections.map((s) => s.metric).join(", ")}] filters=${stableStringify(response.appliedFilters)}`
+        : `refused ${response.stage}/${response.reason}`;
 
   return { id, question, userId, passed: failures.length === 0, failures, observed };
 }

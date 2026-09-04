@@ -2,26 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SendIcon, SparkIcon } from "@/components/icons";
-import type { AnsweredResponse, RefusedResponse } from "@/lib/api";
+import type { AnsweredResponse, OverviewResponse, RefusedResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { AnswerView } from "./answer-view";
 import { useChatStore } from "./chat-store";
 
 const SUGGESTIONS = [
+  "Give me a hiring summary for 2024",
   "How many people are active across the company?",
   "Headcount by band",
   "Open requisitions by job family",
   "Average time to fill for Sales roles",
-  "How many hires did we make in 2024?",
 ];
 
-function isAskResponse(value: unknown): value is AnsweredResponse | RefusedResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    ((value as { status?: unknown }).status === "answered" ||
-      (value as { status?: unknown }).status === "refused")
-  );
+function isAskResponse(
+  value: unknown,
+): value is AnsweredResponse | RefusedResponse | OverviewResponse {
+  if (typeof value !== "object" || value === null) return false;
+  const status = (value as { status?: unknown }).status;
+  return status === "answered" || status === "refused" || status === "overview";
 }
 
 export function Chat() {

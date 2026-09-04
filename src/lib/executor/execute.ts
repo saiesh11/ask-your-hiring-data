@@ -8,6 +8,7 @@ import {
   type GroupByField,
   type JobFamily as FamilyName,
   type Metric,
+  type OverviewIR,
   type QueryIR,
 } from "@/lib/query-ir";
 import { scopeFilters } from "./scope";
@@ -64,6 +65,16 @@ export type ExecutorFailure = {
 };
 
 export type ExecutorResult = ScalarAnswer | GroupedAnswer | ExecutorFailure;
+
+export type OverviewAnswer = {
+  ok: true;
+  kind: "overview";
+  appliedFilters: Filters;
+  /** One entry per metric that had matching records, in a fixed reading order. */
+  sections: Array<ScalarAnswer | GroupedAnswer>;
+  /** Union of every section's cited records and read fields. */
+  citations: Citations;
+};
 
 // --- Metric capability matrix (documented in PROCESS.md) -------------------
 // Stock metrics are point-in-time snapshots and reject a dateRange; flow
@@ -340,4 +351,58 @@ export function execute(queryIR: QueryIR, session: Session): ExecutorResult {
     return computeGrouped(plan.base, plan.groupBy, appliedFilters, metric);
   }
   return computeScalar(plan.base, appliedFilters, metric);
+}
+
+/**
+ * The broad-question path: one call, every applicable metric, composed. Role
+ * scoping is applied first here too — the same `scopeFilters` boundary — so a
+ * recruiter's overview can only ever cover their own job family.
+ *
+ * Point-in-time metrics (headcount, open reqs, headcount by band) ignore any
+ * date range; the flow metrics (hire count, average time to fill) respect it.
+ * A metric with zero matching records is left out rather than failing the whole
+ * overview; only an entirely empty result is a `no_matching_records` failure.
+ */
+export function executeOverview(
+  overviewIR: OverviewIR,
+  session: Session,
+): OverviewAnswer | ExecutorFailure {
+  const appliedFilters = scopeFilters(overviewIR.filters, session);
+  const { dateRange: _dropped, ...snapshot } = appliedFilters;
+  const scopedToFamily = appliedFilters.jobFamily !== undefined;
+
+  const sections: Array<ScalarAnswer | GroupedAnswer> = [];
+  const add = (result: ScalarAnswer | GroupedAnswer | ExecutorFailure): void => {
+    if (result.ok) sections.push(result);
+  };
+
+  add(computeScalar("headcount", snapshot, "headcount"));
+  add(computeGrouped("headcount", "band", snapshot, "headcount_by_band"));
+  add(
+    scopedToFamily
+      ? computeScalar("open_reqs", snapshot, "open_reqs")
+      : computeGrouped("open_reqs", "jobFamily", snapshot, "open_reqs"),
+  );
+  add(computeScalar("hire_count", appliedFilters, "hire_count"));
+  add(computeScalar("avg_time_to_fill", appliedFilters, "avg_time_to_fill"));
+
+  if (sections.length === 0) {
+    return {
+      ok: false,
+      reason: "no_matching_records",
+      message: "No records match this query.",
+      appliedFilters,
+    };
+  }
+
+  return {
+    ok: true,
+    kind: "overview",
+    appliedFilters,
+    sections,
+    citations: {
+      recordIds: [...new Set(sections.flatMap((s) => s.citations.recordIds))],
+      fields: [...new Set(sections.flatMap((s) => s.citations.fields))],
+    },
+  };
 }

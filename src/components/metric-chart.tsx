@@ -9,11 +9,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { AnsweredResponse } from "@/lib/api";
+import type { OverviewSection } from "@/lib/api";
 import { CompositionDonut } from "./composition-donut";
 import { ScalarTile } from "./scalar-tile";
 
-const HEADCOUNT_METRICS = new Set<AnsweredResponse["metric"]>(["headcount", "headcount_by_band"]);
+const HEADCOUNT_METRICS = new Set<OverviewSection["metric"]>(["headcount", "headcount_by_band"]);
 
 /**
  * Picks the visualization that fits the answer:
@@ -22,7 +22,7 @@ const HEADCOUNT_METRICS = new Set<AnsweredResponse["metric"]>(["headcount", "hea
  *  - grouped other    → ranked horizontal bars
  * Single accent colour throughout; a lone series never gets per-bar colours.
  */
-export function MetricChart({ response }: { response: AnsweredResponse }) {
+export function MetricChart({ response }: { response: OverviewSection }) {
   const { chart } = response;
 
   const visual =

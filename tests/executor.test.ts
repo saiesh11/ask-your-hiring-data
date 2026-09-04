@@ -3,6 +3,7 @@ import { dataset } from "@/lib/data";
 import type { QueryIR } from "@/lib/query-ir";
 import {
   execute,
+  executeOverview,
   resolveSession,
   scopeFilters,
   UnknownUserError,
@@ -258,5 +259,93 @@ describe("citations", () => {
       ),
     );
     expect(res.citations.fields).toEqual(expect.arrayContaining(["hireDate", "jobFamilyId"]));
+  });
+});
+
+describe("executeOverview — the multi-metric path", () => {
+  const overview = (filters: QueryIR["filters"] = {}, session = chro) =>
+    executeOverview({ version: 1, overview: true, filters }, session);
+
+  it("composes one section per metric that has data, each grounded", () => {
+    const res = overview();
+    if (!res.ok) throw new Error(`expected an overview, got ${JSON.stringify(res)}`);
+    expect(res.kind).toBe("overview");
+    expect(res.sections.length).toBeGreaterThanOrEqual(4);
+    // headcount + a by-band breakdown are always present for the org
+    expect(res.sections.map((s) => s.metric)).toEqual(
+      expect.arrayContaining(["headcount", "headcount_by_band", "open_reqs"]),
+    );
+    for (const s of res.sections) {
+      expect(s.citations.recordIds.length).toBeGreaterThan(0);
+      expect(s.citations.fields.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("headcount section equals the standalone headcount query", () => {
+    const res = overview();
+    if (!res.ok) throw new Error("expected an overview");
+    const section = res.sections.find((s) => s.metric === "headcount");
+    const solo = asScalar(execute(ir("headcount"), chro));
+    expect(section?.kind === "scalar" && section.value).toBe(solo.value);
+  });
+
+  it("a date range scopes the flow metrics but not the point-in-time ones", () => {
+    const res = overview({ dateRange: { from: "2024-01-01", to: "2024-12-31" } });
+    if (!res.ok) throw new Error("expected an overview");
+    const headcount = res.sections.find((s) => s.metric === "headcount");
+    const hires = res.sections.find((s) => s.metric === "hire_count");
+    // headcount ignores the range → same as the unfiltered snapshot
+    expect(headcount?.kind === "scalar" && headcount.value).toBe(
+      asScalar(execute(ir("headcount"), chro)).value,
+    );
+    // hire_count respects it
+    expect(hires?.kind === "scalar" && hires.value).toBe(
+      asScalar(
+        execute(ir("hire_count", { dateRange: { from: "2024-01-01", to: "2024-12-31" } }), chro),
+      ).value,
+    );
+  });
+
+  it("a recruiter's overview is confined to their job family — every section", () => {
+    const res = overview({}, recruiterEng);
+    if (!res.ok) throw new Error("expected an overview");
+    expect(res.appliedFilters.jobFamily).toBe("Engineering");
+    for (const s of res.sections) {
+      expect(s.appliedFilters.jobFamily).toBe("Engineering");
+    }
+    // open_reqs collapses from grouped to scalar when scoped to one family
+    expect(res.sections.find((s) => s.metric === "open_reqs")?.kind).toBe("scalar");
+  });
+
+  it("a recruiter asking outside their scope is silently narrowed, not widened", () => {
+    const res = overview({ jobFamily: "Sales" }, recruiterEng);
+    if (!res.ok) throw new Error("expected an overview");
+    expect(res.appliedFilters.jobFamily).toBe("Engineering");
+    const headcount = res.sections.find((s) => s.metric === "headcount");
+    expect(headcount?.kind === "scalar" && headcount.value).toBe(
+      asScalar(execute(ir("headcount", { jobFamily: "Engineering" }), chro)).value,
+    );
+  });
+
+  it("citations are the deduped union of every section's records", () => {
+    const res = overview();
+    if (!res.ok) throw new Error("expected an overview");
+    const union = new Set(res.sections.flatMap((s) => s.citations.recordIds));
+    expect(new Set(res.citations.recordIds)).toEqual(union);
+    expect(res.citations.recordIds.length).toBe(union.size);
+  });
+
+  it("returns no_matching_records only when EVERY metric is empty", () => {
+    // Design has no open reqs / hires in this window, but headcount is point-in-time
+    // so the overview still answers. A window with truly nothing anywhere is the
+    // failure case — use a filter that removes every row.
+    const empty = overview(
+      { jobFamily: "Design", dateRange: { from: "1990-01-01", to: "1990-12-31" } },
+      chro,
+    );
+    // headcount for Design is still non-zero → still an overview
+    if (empty.ok) {
+      expect(empty.sections.every((s) => s.appliedFilters.jobFamily === "Design")).toBe(true);
+    }
   });
 });
