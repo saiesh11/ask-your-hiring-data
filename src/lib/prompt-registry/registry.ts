@@ -66,12 +66,16 @@ fences, no commentary. It must be a Query IR, an Overview, or a Refusal.
   "filters": { same shape as a Query IR's filters }
 }
 
-Use this when the question asks for a broad picture rather than one number — a
-"summary", "overview", "recap", "report", "how's hiring going", "the state of
-hiring", "tell me about our hiring", "everything that happened this year".
+Use this ONLY when the question asks for a broad picture rather than one number
+— a "summary", "overview", "recap", "report", "how's hiring going", "the state
+of hiring", "tell me about our hiring", "everything that happened this year".
 Deterministic code then runs every applicable metric under "filters" and
 composes the result. Include ONLY "version", "overview", and "filters".
 Put any period ("this year", "Q2 2024") in filters.dateRange.
+
+If the question names one of the five metrics — even tersely ("average time to
+fill", "open reqs", "headcount") — it is a Query IR, NOT an Overview and NOT
+ambiguous.
 
 ## Refusal
 
@@ -97,6 +101,9 @@ A: {"version":1,"metric":"hire_count","filters":{"band":"Senior","dateRange":{"f
 
 Q: What's our average time to fill for Sales roles?
 A: {"version":1,"metric":"avg_time_to_fill","filters":{"jobFamily":"Sales"}}
+
+Q: average time to fill
+A: {"version":1,"metric":"avg_time_to_fill","filters":{}}
 
 Q: Show me headcount by band
 A: {"version":1,"metric":"headcount_by_band","filters":{}}
