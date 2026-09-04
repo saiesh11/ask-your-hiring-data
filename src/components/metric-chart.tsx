@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -11,28 +12,53 @@ import {
 } from "recharts";
 import type { OverviewSection } from "@/lib/api";
 import { CompositionDonut } from "./composition-donut";
+import { DotPlot } from "./dot-plot";
+import { GaugeChart } from "./gauge-chart";
 import { ScalarTile } from "./scalar-tile";
+import { StackedBar } from "./stacked-bar";
 
-const HEADCOUNT_METRICS = new Set<OverviewSection["metric"]>(["headcount", "headcount_by_band"]);
+export type ChartVariant = "full" | "compact";
 
 /**
- * Picks the visualization that fits the answer:
- *  - scalar          → big-number tile
- *  - grouped headcount → composition donut (share of a whole)
- *  - grouped other    → ranked horizontal bars
- * Single accent colour throughout; a lone series never gets per-bar colours.
+ * Picks the visualization that fits the answer — deliberately different per
+ * metric so a screen with several answers doesn't repeat one look:
+ *
+ *  - avg_time_to_fill (scalar) → radial gauge (value on a 0-to-benchmark arc)
+ *  - other scalars             → big-number tile
+ *  - headcount_by_band         → composition donut, or a slim stacked bar in a
+ *                                tight (`compact`) card
+ *  - open_reqs (grouped)       → dot plot (a light read for a few families)
+ *  - other grouped             → ranked horizontal bars
  */
-export function MetricChart({ response }: { response: OverviewSection }) {
-  const { chart } = response;
+export function MetricChart({
+  response,
+  variant = "full",
+}: {
+  response: OverviewSection;
+  variant?: ChartVariant;
+}) {
+  const { chart, metric } = response;
 
-  const visual =
-    chart.kind === "single" ? (
-      <ScalarTile response={response} />
-    ) : HEADCOUNT_METRICS.has(response.metric) ? (
-      <CompositionDonut series={chart.series} />
-    ) : (
-      <GroupedBars series={chart.series} unit={chart.unit} />
-    );
+  let visual: ReactNode;
+  if (chart.kind === "single") {
+    visual =
+      metric === "avg_time_to_fill" ? (
+        <GaugeChart value={chart.value} unit={chart.unit} />
+      ) : (
+        <ScalarTile response={response} />
+      );
+  } else if (metric === "headcount_by_band") {
+    visual =
+      variant === "compact" ? (
+        <StackedBar series={chart.series} />
+      ) : (
+        <CompositionDonut series={chart.series} />
+      );
+  } else if (metric === "open_reqs") {
+    visual = <DotPlot series={chart.series} unit={chart.unit} />;
+  } else {
+    visual = <GroupedBars series={chart.series} unit={chart.unit} />;
+  }
 
   return <div data-testid="metric-chart">{visual}</div>;
 }

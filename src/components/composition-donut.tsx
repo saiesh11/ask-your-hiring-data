@@ -49,23 +49,21 @@ export function CompositionDonut({ series }: { series: Slice[] }) {
         </div>
       </div>
 
-      <ul className="flex w-full flex-col gap-2 text-sm" style={{ maxWidth: "16rem" }}>
+      <ul className="flex w-full flex-col gap-1.5 text-sm" style={{ maxWidth: "15rem" }}>
         {series.map((d, i) => (
           <li key={d.label} className="flex items-center gap-2.5">
             <span
-              className="size-2.5 shrink-0 rounded-[3px] bg-[var(--chart-1)]"
+              className="size-2 shrink-0 rounded-[2px] bg-[var(--chart-1)]"
               style={{ opacity: sliceOpacity(i) }}
             />
-            <span className="min-w-0 flex-1 truncate">{d.label}</span>
-            <span className="flex shrink-0 items-baseline gap-2.5">
-              <Num className="text-xs text-muted-foreground">
-                {Math.round((d.value / total) * 100)}%
-              </Num>
-              <span
-                className="inline-block text-right font-mono tabular-nums"
-                style={{ width: "2rem" }}
-              >
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">{d.label}</span>
+            {/* the figures are a quiet reference — the donut carries the weight */}
+            <span className="flex shrink-0 items-baseline gap-2 text-xs text-muted-foreground/80 tabular-nums">
+              <span style={{ width: "2rem", textAlign: "right", display: "inline-block" }}>
                 {d.value.toLocaleString()}
+              </span>
+              <span style={{ width: "2.5rem", textAlign: "right", display: "inline-block" }}>
+                {Math.round((d.value / total) * 100)}%
               </span>
             </span>
           </li>

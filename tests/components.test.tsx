@@ -51,11 +51,11 @@ const overview: OverviewResponse = {
   status: "overview",
   appliedFilters: {},
   scope: "org_wide",
-  summary: "Hiring overview for the organization: headcount 49, hires 10.",
+  summary: "Hiring overview for the organization: headcount 49, hires 10, headcount by band.",
   citations: {
-    recordIds: ["emp_0001", "job_0002"],
-    fields: ["active", "hireDate"],
-    recordCount: 2,
+    recordIds: ["emp_0001", "job_0002", "emp_0003"],
+    fields: ["active", "hireDate", "bandId"],
+    recordCount: 3,
   },
   sections: [
     {
@@ -79,6 +79,27 @@ const overview: OverviewResponse = {
       citations: { recordIds: ["job_0002"], fields: ["hireDate"], recordCount: 1 },
       chart: { kind: "single", unit: "count", label: "Hires", value: 10 },
       summary: "Hires: 10 (grounded in 1 record).",
+    },
+    {
+      metric: "headcount_by_band",
+      kind: "grouped",
+      groups: [
+        { key: "Junior", value: 6 },
+        { key: "Senior", value: 3 },
+      ],
+      unit: "count",
+      appliedFilters: {},
+      scope: "org_wide",
+      citations: { recordIds: ["emp_0003"], fields: ["active", "bandId"], recordCount: 1 },
+      chart: {
+        kind: "bar",
+        unit: "count",
+        series: [
+          { label: "Junior", value: 6 },
+          { label: "Senior", value: 3 },
+        ],
+      },
+      summary: "Headcount by band: Junior 6, Senior 3 (grounded in 1 record).",
     },
   ],
 };
@@ -106,23 +127,27 @@ describe("AnswerView", () => {
     expect(screen.getByText(/out of scope · model refusal/)).toBeInTheDocument();
   });
 
-  it("renders an overview: top summary plus one grounded card per section", () => {
+  it("renders an overview: KPI tiles on top, chart cards below", () => {
     render(<AnswerView response={overview} />);
     expect(screen.getByTestId("overview")).toBeInTheDocument();
     expect(screen.getByText(/Hiring overview for the organization/)).toBeInTheDocument();
-    expect(screen.getByText(/Headcount: 49/)).toBeInTheDocument();
-    expect(screen.getByText(/Hires: 10/)).toBeInTheDocument();
-    expect(screen.getAllByTestId("metric-chart")).toHaveLength(2);
-    expect(screen.getByText(/across 2 metrics/)).toBeInTheDocument();
+    // plain counts render as compact KPI tiles (label + figure), not charts
+    expect(screen.getByText("Headcount")).toBeInTheDocument();
+    expect(screen.getByText("49")).toBeInTheDocument();
+    expect(screen.getByText("Hires")).toBeInTheDocument();
+    // only the grouped section gets a chart
+    expect(screen.getAllByTestId("metric-chart")).toHaveLength(1);
+    expect(screen.getByText(/Headcount by band: Junior 6, Senior 3/)).toBeInTheDocument();
+    expect(screen.getByText(/across 3 metrics/)).toBeInTheDocument();
   });
 
-  it("each overview section can toggle its own cited records", async () => {
+  it("an overview's chart card can toggle its own cited records", async () => {
     const user = userEvent.setup();
     render(<AnswerView response={overview} />);
     const toggles = screen.getAllByRole("button", { name: /show records/i });
-    expect(toggles).toHaveLength(2);
+    expect(toggles).toHaveLength(1);
     await user.click(toggles[0]!);
-    expect(screen.getByText("emp_0001")).toBeInTheDocument();
+    expect(screen.getByText("emp_0003")).toBeInTheDocument();
   });
 });
 
