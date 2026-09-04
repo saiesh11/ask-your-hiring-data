@@ -21,10 +21,38 @@ answer.
   brief exactly and runs from a clean clone with just `pnpm install && pnpm dev` (no database,
   no secrets, three demo principals via an in-UI switcher). Its own `PROCESS.md` and CI live
   there. **Start here to evaluate the graded checklist.**
-- **`main`** (this branch) — the same IR / executor / scoping / eval core, taken further into a
-  hosted multi-tenant product: NextAuth v5, Postgres, per-org seeded datasets, RBAC, a
+- **`saas-model`** (this branch) — the same IR / executor / scoping / eval core, taken further
+  into a hosted multi-tenant product: NextAuth v5, Postgres, per-org seeded datasets, RBAC, a
   redesigned UI. Needs a Postgres database to run the app; `pnpm test` and `pnpm eval` still run
   offline.
+
+## From `assessment-core` to a SaaS — what changed
+
+The graded core is **identical** on both branches. This branch only _wraps_ it in the machinery
+a real product needs. Nothing below touches how a question becomes an answer — it changes _who_
+is asking, _whose_ data it runs against, and _what they're allowed to see_.
+
+| Concern                    | `assessment-core`                                                                                   | `saas-model` (this branch)                                                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Identity**               | 3 fixed demo principals, switched in the UI                                                         | real email + password sign-up / login — **NextAuth v5**, JWT sessions (no session table)                                                              |
+| **Who can use it**         | anyone with the URL                                                                                 | members of an organization you create at sign-up or are invited to                                                                                    |
+| **Where data lives**       | one shared set of committed JSON fixtures, in memory                                                | **PostgreSQL** via **Prisma 7** (driver adapter); wired for Supabase, any Postgres works                                                              |
+| **Whose data**             | a single dataset                                                                                    | **each org gets its own** dataset, generated deterministically from a per-org seed at sign-up                                                         |
+| **Tenant isolation**       | n/a                                                                                                 | every read is `WHERE orgId = …`; `PrismaHiringDataSource(orgId)` _cannot_ return another org's rows                                                   |
+| **Where scope comes from** | `resolveSession(userId)` — a lookup in the fixture                                                  | `requireContext()` reads the **Membership row from the DB** for the cookie session — never the body                                                   |
+| **Access control**         | `scopeFilters()` — CHRO (org-wide) vs recruiter (one family)                                        | full **RBAC**: 5 roles, 7 named permissions, `can(role, permission)`, last-owner protection                                                           |
+| **Roles**                  | `chro`, `recruiter`                                                                                 | `OWNER`, `ADMIN`, `CHRO`, `RECRUITER`, `VIEWER` — recruiters/viewers carry a **job-family list**                                                      |
+| **Member management**      | none                                                                                                | invite / change role / change scope / remove / revoke invitation + accept-invite flow, all permission-gated server-side                               |
+| **Routes**                 | `/`, `/app`, `/api/ask`, `/api/users`                                                               | + `/login`, `/signup`, `/app/members`, `/app/settings`, `/api/signup`, `/api/members[/:id]`, `/api/organization`, `/api/invitations/*`, `/api/auth/*` |
+| **Setup to run the app**   | `pnpm install && pnpm dev`                                                                          | + a Postgres URL, `.env.local` (`DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`), `pnpm db:migrate`                                                       |
+| **Unchanged**              | Query IR · deterministic executor · scope-first · 3 typed refusal stages · citations · 18-case eval | **byte-for-byte the same**                                                                                                                            |
+
+**In one line:** `assessment-core` proves the idea with zero setup; `saas-model` is that same
+engine behind real sign-in, a real database, one dataset per customer, and a proper
+roles-and-permissions layer — with the security boundary still enforced in the _same place_
+(first, inside the executor, in plain code). The SaaS-specific build notes (Prisma 7's driver
+adapter, the seed-transaction timeout, keeping NextAuth out of the test module graph) are in
+[`PROCESS.md`](PROCESS.md).
 
 ## Architecture
 
@@ -264,7 +292,7 @@ prisma/                 schema.prisma, migrations
 
 ## CI
 
-`.github/workflows/ci.yml` runs the full gate on every push to `main` and every PR:
+`.github/workflows/ci.yml` runs the full gate on every push to `saas-model` and every PR:
 `format:check → lint → typecheck → test → eval → build`. It needs **no secrets** — the eval
 suite and tests use the in-memory generator and mock provider, and the Prisma client is
 constructed lazily so `build` never opens a connection.
